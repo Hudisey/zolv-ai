@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles  # <-- BU EKLENDİ
 from pydantic import BaseModel
 from openai import OpenAI
 import os
@@ -15,6 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Resimlerin ve statik dosyaların okunabilmesi için kök dizini bağlıyoruz
+app.mount("/static", StaticFiles(directory="."), name="static")
+
 client = OpenAI(
     api_key=os.environ.get("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
@@ -23,7 +27,6 @@ client = OpenAI(
 class MesajIstegi(BaseModel):
     mesaj: str
 
-# Ana dizine girildiğinde index.html dosyasını ekrana basar
 @app.get("/", response_class=HTMLResponse)
 def ana_sayfa():
     if os.path.exists("index.html"):
