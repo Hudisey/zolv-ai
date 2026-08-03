@@ -155,16 +155,18 @@ HTML_TEMPLATE = """
         .top-bar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 12px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #222;
             background-color: #0e0e0e;
+            gap: 12px;
         }
 
         .top-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            min-width: 0;
+            flex-shrink: 1;
         }
 
         .menu-bubble-btn {
@@ -180,6 +182,7 @@ HTML_TEMPLATE = """
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
+            flex-shrink: 0;
             transition: background 0.2s;
         }
 
@@ -190,10 +193,11 @@ HTML_TEMPLATE = """
         .logo-container {
             display: flex;
             align-items: center;
+            overflow: hidden;
         }
 
         .logo-container img {
-            height: 64px;
+            height: 48px;
             object-fit: contain;
         }
 
@@ -203,23 +207,39 @@ HTML_TEMPLATE = """
             border: 1px solid #333;
             border-radius: 20px;
             padding: 3px;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         .mode-btn {
             background: none;
             border: none;
             color: #aaa;
-            padding: 6px 14px;
-            font-size: 13px;
+            padding: 6px 12px;
+            font-size: 12px;
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .mode-btn.active {
             background-color: #333;
             color: #fff;
             font-weight: 500;
+        }
+
+        @media (min-width: 600px) {
+            .top-bar {
+                padding: 12px 20px;
+            }
+            .logo-container img {
+                height: 64px;
+            }
+            .mode-btn {
+                padding: 6px 14px;
+                font-size: 13px;
+            }
         }
 
         .chat-messages {
@@ -558,7 +578,6 @@ HTML_TEMPLATE = """
             const micBtn = document.getElementById('micBtn');
 
             if (isListening) {
-                // Durdur ve sunucuya gönder
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                     mediaRecorder.stop();
                 }
@@ -578,10 +597,7 @@ HTML_TEMPLATE = """
 
                 mediaRecorder.onstop = async () => {
                     stopListeningUI();
-                    // Ses kaydını durdurduktan sonra audio blob oluştur ve backend'e gönder
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    
-                    // Mikrofon stream track'lerini kapat
                     stream.getTracks().forEach(track => track.stop());
 
                     const formData = new FormData();
