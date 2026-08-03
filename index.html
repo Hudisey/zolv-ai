@@ -20,13 +20,13 @@
             overflow: hidden;
         }
 
-        /* Üst Bar */
+        /* Üst Bar ve Logo Ayarları */
         #top-bar {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px;
+            height: 60px; /* Barın yüksekliği sabit */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -36,9 +36,19 @@
             z-index: 10;
         }
 
+        #logo-container {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
         #logo-container img {
-            height: 28px;
+            /* Logonun yüksekliğini 44px yaparak eskisinin tam iki katına çıkardık */
+            height: 44px; 
+            width: auto; /* Genişlik orantılı değişir */
             object-fit: contain;
+            /* Siyah fonda daha iyi görünmesi için parlaklık ve gölge ekledik */
+            filter: brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
         }
 
         #signature {
@@ -46,6 +56,7 @@
             color: #666;
             letter-spacing: 0.5px;
             font-weight: 500;
+            margin-top: 2px;
         }
 
         /* Sohbet Alanı */
