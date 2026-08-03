@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZOLV.AI</title>
-    <!-- FAVICON ÇAĞRISI -->
     <link rel="icon" href="/static/favicon.png" type="image/png">
     <style>
         * {
@@ -19,37 +18,148 @@
             background-color: #0e0e0e;
             color: #f1f1f1;
             display: flex;
-            flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* Header Stilleri */
+        /* Sidebar (Sol Menü) */
+        #sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: -260px;
+            height: 100%;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .new-chat-btn {
+            background-color: #262626;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: calc(100% - 30px);
+            margin: 15px 15px 5px 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #333;
+        }
+
+        .chat-history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        .delete-chat-btn {
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .delete-chat-btn:hover {
+            color: #ff5555;
+            background-color: #222;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        #overlay.active {
+            display: block;
+        }
+
+        /* Ana İçerik */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
         header {
             padding: 10px 15px;
             background-color: #161616;
             border-bottom: 1px solid #222;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             min-height: 50px;
         }
 
-        .logo-area {
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
-            height: 32px;
+            gap: 12px;
         }
 
-        .logo-area img {
-            height: 100%;
-            width: auto;
-            object-fit: contain;
-            background-color: #222;
-            padding: 3px 6px;
-            border-radius: 4px;
-            display: block;
+        .menu-toggle-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
         }
 
         h1.site-title {
@@ -57,11 +167,7 @@
             letter-spacing: 1px;
             color: #fff;
             margin: 0;
-        }
-
-        .credits {
-            font-size: 0.75rem;
-            color: #888;
+            user-select: none;
         }
 
         #chat-container {
@@ -114,7 +220,31 @@
             display: block;
         }
 
-        /* Input Alanı Stilleri */
+        /* 3 Nokta Düşünme Efekti */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 2px;
+        }
+
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Input Alanı */
         .input-container {
             background-color: #161616;
             border-top: 1px solid #222;
@@ -211,28 +341,41 @@
 </head>
 <body>
 
-    <header>
-        <div class="logo-area">
-            <img src="/static/logo.png" alt="Logo">
-            <h1 class="site-title">ZOLV.AI</h1>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2 style="font-size: 1rem; color: #fff;">Sohbetler</h2>
+            <button class="menu-toggle-btn" id="sidebar-close" style="font-size: 1.1rem;">&times;</button>
         </div>
-        <div class="credits">Made by Hudisey</div>
-    </header>
-
-    <div id="chat-container">
-        <div class="message ai-message">
-            Selam! Artık sol alttaki "+" butonundan "Görsel ekle" diyerek bana resim gönderebilirsin. Nasıl yardımcı olabilirim?
-        </div>
+        <button class="new-chat-btn" id="new-chat-btn">
+            <span>+</span> Yeni Sohbet
+        </button>
+        <div class="chat-history-list" id="history-list"></div>
     </div>
+    <div id="overlay"></div>
 
-    <div class="input-container">
-        <form id="chat-form" enctype="multipart/form-data">
-            <input type="file" id="image-input" name="file" accept="image/*" style="display: none;">
-            <button type="button" class="upload-btn" id="upload-trigger" title="Görsel Ekle">+</button>
-            <span id="file-preview"></span>
-            <input type="text" id="message-input" name="message" placeholder="Bir şeyler yazın..." autocomplete="off">
-            <button type="submit" id="send-btn" title="Gönder">&#10148;</button>
-        </form>
+    <div class="main-content">
+        <header>
+            <div class="header-left">
+                <button class="menu-toggle-btn" id="sidebar-toggle" title="Menü">&#9776;</button>
+                <h1 class="site-title">ZOLV.AI</h1>
+            </div>
+        </header>
+
+        <div id="chat-container">
+            <div class="message ai-message">
+                Selam! Sol alttaki "+" butonundan görsel ekleyebilir, sol üstteki menüden yeni sohbet açabilirsin. Nasıl yardımcı olabilirim?
+            </div>
+        </div>
+
+        <div class="input-container">
+            <form id="chat-form" enctype="multipart/form-data">
+                <input type="file" id="image-input" name="file" accept="image/*" style="display: none;">
+                <button type="button" class="upload-btn" id="upload-trigger" title="Görsel Ekle">+</button>
+                <span id="file-preview"></span>
+                <input type="text" id="message-input" name="message" placeholder="Bir şeyler yazın..." autocomplete="off">
+                <button type="submit" id="send-btn" title="Gönder">&#10148;</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -242,8 +385,77 @@
         const imageInput = document.getElementById('image-input');
         const uploadTrigger = document.getElementById('upload-trigger');
         const filePreview = document.getElementById('file-preview');
+        
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const overlay = document.getElementById('overlay');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const historyList = document.getElementById('history-list');
 
         let selectedFile = null;
+        let chatHistories = JSON.parse(localStorage.getItem('zolv_chats')) || [];
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        sidebarClose.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+
+        newChatBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = `
+                <div class="message ai-message">
+                    Yeni bir sohbet başlatıldı. Nasıl yardımcı olabilirim?
+                </div>
+            `;
+            closeSidebar();
+        });
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (chatHistories.length === 0) {
+                historyList.innerHTML = '<div style="color: #666; font-size: 0.8rem; padding: 10px; text-align: center;">Geçmiş sohbet yok</div>';
+                return;
+            }
+            chatHistories.forEach((chat, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = chat.title || `Sohbet ${index + 1}`;
+                titleSpan.style.overflow = 'hidden';
+                titleSpan.style.textOverflow = 'ellipsis';
+                titleSpan.style.whiteSpace = 'nowrap';
+                titleSpan.style.flex = '1';
+                
+                titleSpan.addEventListener('click', () => {
+                    closeSidebar();
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-chat-btn';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.title = 'Sohbeti Sil';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    chatHistories.splice(index, 1);
+                    localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+                    renderHistory();
+                });
+
+                item.appendChild(titleSpan);
+                item.appendChild(deleteBtn);
+                historyList.appendChild(item);
+            });
+        }
+        renderHistory();
 
         uploadTrigger.addEventListener('click', () => {
             imageInput.click();
@@ -305,9 +517,15 @@
             filePreview.style.display = 'none';
             selectedFile = null;
 
+            // 3 Noktalı Düşünme Efekti
             const aiMsgDiv = document.createElement('div');
             aiMsgDiv.className = 'message ai-message';
-            aiMsgDiv.textContent = 'Düşünüyor...';
+            
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            aiMsgDiv.appendChild(typingIndicator);
+            
             chatContainer.appendChild(aiMsgDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
