@@ -51,8 +51,11 @@ async def yapay_zeka_cevapla(
             })
 
         response = client.chat.completions.create(
-            model="qwen/qwen3.6-27b",  # Güncel Groq vizyon modeli
-            messages=[{"role": "user", "content": messages_content}],
+            model="qwen/qwen3.6-27b",
+            messages=[
+                {"role": "system", "content": "Sen yardımcı bir yapay zeka asistanısın. Kullanıcıya her zaman Türkçe yanıt ver."},
+                {"role": "user", "content": messages_content}
+            ],
             max_tokens=1024
         )
         cevap = response.choices[0].message.content
