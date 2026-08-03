@@ -8,7 +8,10 @@ import os
 import base64
 
 app = FastAPI()
+from fastapi.staticfiles import StaticFiles
 
+# FastAPI'ye statik dosyaların (resimler vb.) olduğu klasörü tanıtıyoruz
+app.mount("/", StaticFiles(directory="."), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
