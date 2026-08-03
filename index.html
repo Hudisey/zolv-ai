@@ -4,338 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zolv AI</title>
-    <!-- Sekme İkonu (Favicon) -->
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #0d0d0d;
-            color: #e0e0e0;
+            margin: 0; padding: 0;
+            background-color: #0d0d0d; color: #e0e0e0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+            display: flex; height: 100vh; overflow: hidden;
         }
-
-        /* Sol Kenar Çubuğu (Sidebar) - Başlangıçta Kapalı */
         #sidebar {
-            width: 260px;
-            background-color: #121212;
-            border-right: 1px solid #1a1a1a;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 15px;
-            transition: transform 0.3s ease;
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            z-index: 20;
-            transform: translateX(-100%); /* Varsayılan kapalı */
+            width: 260px; background-color: #121212; border-right: 1px solid #1a1a1a;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 15px; transition: transform 0.3s ease;
+            position: absolute; left: 0; top: 0; height: 100%; z-index: 20;
+            transform: translateX(-100%);
         }
-
-        #sidebar.open {
-            transform: translateX(0); /* Açık hali */
-        }
-
-        .sidebar-top {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
+        #sidebar.open { transform: translateX(0); }
+        .sidebar-top { display: flex; flex-direction: column; gap: 15px; }
         #sidebar-new-chat {
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background 0.2s;
+            background-color: #1a1a1a; color: #fff; border: 1px solid #333;
+            padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
+            font-weight: 500; display: flex; align-items: center; justify-content: space-between;
         }
-
-        #sidebar-new-chat:hover {
-            background-color: #262626;
-        }
-
-        .chat-history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            overflow-y: auto;
-            max-height: calc(100vh - 150px);
-        }
-
+        #sidebar-new-chat:hover { background-color: #262626; }
+        .chat-history-list { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; max-height: calc(100vh - 150px); }
         .history-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #aaa;
-            transition: background 0.2s, color 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #aaa;
         }
+        .history-item:hover { background-color: #1a1a1a; color: #fff; }
+        .delete-chat-btn { background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; border-radius: 4px; }
+        .delete-chat-btn:hover { color: #ff5555; background-color: #222; }
 
-        .history-item:hover {
-            background-color: #1a1a1a;
-            color: #fff;
-        }
+        #main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; margin-left: 0; transition: margin-left 0.3s ease; }
+        #main-content.shifted { margin-left: 260px; }
 
-        .delete-chat-btn {
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s, background 0.2s;
-        }
-
-        .delete-chat-btn:hover {
-            color: #ff5555;
-            background-color: #222;
-        }
-
-        /* Ana İçerik Alanı - Başlangıçta Tam Ekran */
-        #main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: relative;
-            margin-left: 0; 
-            transition: margin-left 0.3s ease;
-        }
-
-        #main-content.shifted {
-            margin-left: 260px; /* Panel açılınca sağa kayma */
-        }
-
-        /* Üst Bar */
         #top-bar {
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-            background-color: #0d0d0d;
-            border-bottom: 1px solid #1a1a1a;
-            z-index: 10;
+            height: 60px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 25px; background-color: #0d0d0d; border-bottom: 1px solid #1a1a1a; z-index: 10;
         }
-
-        .top-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
+        .top-left { display: flex; align-items: center; gap: 15px; }
         #toggle-sidebar-btn {
-            background: transparent;
-            border: 1px solid #333;
-            color: #ccc;
-            font-size: 16px;
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, color 0.2s;
+            background: transparent; border: 1px solid #333; color: #ccc; font-size: 16px;
+            width: 36px; height: 36px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
+        #toggle-sidebar-btn:hover { background-color: #1a1a1a; color: #fff; }
+        #logo-container img { height: 36px; width: auto; object-fit: contain; }
+        #signature { font-size: 13px; color: #666; font-weight: 500; }
 
-        #toggle-sidebar-btn:hover {
-            background-color: #1a1a1a;
-            color: #fff;
-        }
-
-        #logo-container img {
-            height: 36px;
-            width: auto;
-            object-fit: contain;
-            filter: brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
-        }
-
-        #signature {
-            font-size: 13px;
-            color: #666;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-        }
-
-        /* Sohbet Akışı */
         #chat-container {
-            flex: 1;
-            margin-bottom: 80px;
-            overflow-y: auto;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            max-width: 800px;
-            width: 100%;
-            align-self: center;
+            flex: 1; margin-bottom: 90px; overflow-y: auto; padding: 30px 20px;
+            display: flex; flex-direction: column; gap: 24px; max-width: 800px; width: 100%; align-self: center;
         }
+        .message-row { display: flex; flex-direction: column; width: 100%; gap: 6px; }
+        .user-row { align-items: flex-end; }
+        .ai-row { align-items: flex-start; }
+        .message { max-width: 90%; line-height: 1.6; font-size: 15px; word-wrap: break-word; color: #e0e0e0; }
+        .user-message { color: #ffffff; font-weight: 500; }
+        .uploaded-img-preview-msg { max-width: 200px; border-radius: 6px; margin-bottom: 5px; display: block; }
 
-        .message-row {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 6px;
-        }
-
-        .user-row {
-            align-items: flex-end;
-        }
-
-        .ai-row {
-            align-items: flex-start;
-        }
-
-        .message {
-            max-width: 90%;
-            line-height: 1.6;
-            font-size: 15px;
-            word-wrap: break-word;
-            color: #e0e0e0;
-            background: transparent;
-            padding: 0;
-            border: none;
-        }
-
-        .user-message {
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .copy-btn {
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: color 0.2s, background 0.2s;
-        }
-
-        .copy-btn:hover {
-            color: #fff;
-            background-color: #1a1a1a;
-        }
-
-        .typing-container {
-            align-self: flex-start;
-            padding: 5px 0;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
+        .typing-container { align-self: flex-start; padding: 5px 0; }
+        .typing-indicator { display: flex; gap: 6px; align-items: center; }
         .typing-indicator span {
-            width: 7px;
-            height: 7px;
-            background-color: #888;
-            border-radius: 50%;
+            width: 7px; height: 7px; background-color: #888; border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
-        }
-
-        /* Alt Giriş Alanı */
+        /* Alt Girdi Alanı */
         #input-area {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #0d0d0d;
-            border-top: 1px solid #1a1a1a;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: center;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background-color: #0d0d0d; border-top: 1px solid #1a1a1a;
+            padding: 15px 20px; display: flex; justify-content: center; flex-direction: column; align-items: center;
         }
+        .input-wrapper-container { max-width: 800px; width: 100%; display: flex; flex-direction: column; background-color: #171717; border: 1px solid #2c2c2c; border-radius: 10px; padding: 8px 12px; }
+        
+        /* Seçilen görselin önizlemesi (göndermeden önce) */
+        #selected-image-preview-container {
+            display: none; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid #252525; margin-bottom: 8px;
+        }
+        #selected-image-preview-container img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+        #selected-image-name { font-size: 13px; color: #aaa; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .remove-img-btn { background: transparent; border: none; color: #ff5555; cursor: pointer; font-size: 16px; }
 
-        .input-wrapper {
-            max-width: 800px;
-            width: 100%;
-            display: flex;
-            background-color: #171717;
-            border: 1px solid #2c2c2c;
-            border-radius: 8px;
-            padding: 8px 12px;
-            align-items: center;
+        .input-main-row { display: flex; align-items: center; gap: 8px; position: relative; }
+        
+        /* "+" Menüsü */
+        #plus-btn {
+            background: transparent; border: 1px solid #333; color: #ccc; font-size: 18px;
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
         }
+        #plus-btn:hover { background-color: #222; color: #fff; }
 
-        #user-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            padding: 6px;
+        #plus-menu {
+            display: none; position: absolute; bottom: 50px; left: 0;
+            background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 30; width: 150px; overflow: hidden;
         }
+        .plus-menu-item {
+            padding: 10px 14px; font-size: 13px; color: #ddd; cursor: pointer; display: flex; align-items: center; gap: 8px;
+        }
+        .plus-menu-item:hover { background-color: #2a2a2a; color: #fff; }
 
-        #send-button {
-            background-color: #333;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
+        #user-input { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; outline: none; padding: 6px; }
+        #send-button { background-color: #333; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        #send-button:hover { background-color: #444; }
+        #send-button:disabled { background-color: #222; color: #555; cursor: not-allowed; }
 
-        #send-button:hover {
-            background-color: #444;
-        }
-
-        #send-button:disabled {
-            background-color: #222;
-            color: #555;
-            cursor: not-allowed;
-        }
-
-        #chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-container::-webkit-scrollbar-thumb {
-            background: #222;
-            border-radius: 3px;
-        }
+        #chat-container::-webkit-scrollbar { width: 6px; }
+        #chat-container::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <!-- Sol Kenar Çubuğu (Sidebar) -->
     <div id="sidebar">
         <div class="sidebar-top">
             <button id="sidebar-new-chat" onclick="yeniSohbet()">
@@ -353,9 +139,7 @@
         <div style="font-size: 12px; color: #555; text-align: center; padding-bottom: 5px;">Zolv AI v2.0</div>
     </div>
 
-    <!-- Ana İçerik -->
     <div id="main-content">
-        <!-- Üst Menü -->
         <div id="top-bar">
             <div class="top-left">
                 <button id="toggle-sidebar-btn" onclick="sidebarToggle()">></button>
@@ -366,62 +150,91 @@
             <div id="signature">Made by Hudisey</div>
         </div>
 
-        <!-- Sohbet Akışı -->
         <div id="chat-container">
             <div class="message-row ai-row">
-                <div class="message ai-message">Selam! Artık sol menü kapalı başlıyor. Nasıl yardımcı olabilirim?</div>
+                <div class="message ai-message">Selam! Artık sol alttaki "+" butonundan "Görsel ekle" diyerek bana resim gönderebilirsin. Nasıl yardımcı olabilirim?</div>
             </div>
         </div>
 
-        <!-- Girdi Paneli -->
         <div id="input-area">
-            <div class="input-wrapper">
-                <input type="text" id="user-input" placeholder="Bir şeyler yazın...">
-                <button id="send-button" onclick="gonder()">Gönder</button>
+            <div class="input-wrapper-container">
+                <!-- Görsel Önizleme Alanı -->
+                <div id="selected-image-preview-container">
+                    <img id="img-preview-tag" src="" alt="Önizleme">
+                    <span id="selected-image-name">dosya.jpg</span>
+                    <button class="remove-img-btn" onclick="gorseliKaldir()">&times;</button>
+                </div>
+
+                <div class="input-main-row">
+                    <!-- Gizli Dosya Seçici -->
+                    <input type="file" id="hidden-file-input" accept="image/*" style="display: none;" onchange="dosyaSecildi(this)">
+                    
+                    <!-- "+" Butonu ve Menüsü -->
+                    <button id="plus-btn" onclick="plusMenuToggle()">+</button>
+                    <div id="plus-menu">
+                        <div class="plus-menu-item" onclick="document.getElementById('hidden-file-input').click(); plusMenuToggle();">
+                            📷 Görsel ekle
+                        </div>
+                    </div>
+
+                    <input type="text" id="user-input" placeholder="Bir şeyler yazın...">
+                    <button id="send-button" onclick="gonder()">Gönder</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        let secilenDosya = null;
+
         function sidebarToggle() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('main-content');
             const toggleBtn = document.getElementById('toggle-sidebar-btn');
-
             sidebar.classList.toggle('open');
             mainContent.classList.toggle('shifted');
+            toggleBtn.innerText = sidebar.classList.contains('open') ? '<' : '>';
+        }
 
-            if (sidebar.classList.contains('open')) {
-                toggleBtn.innerText = '<';
-            } else {
-                toggleBtn.innerText = '>';
+        function plusMenuToggle() {
+            const menu = document.getElementById('plus-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Menü dışına tıklanınca menüyü kapat
+        window.onclick = function(event) {
+            if (!event.target.matches('#plus-btn') && !event.target.closest('#plus-menu')) {
+                document.getElementById('plus-menu').style.display = 'none';
             }
+        }
+
+        function dosyaSecildi(input) {
+            if (input.files && input.files[0]) {
+                secilenDosya = input.files[0];
+                document.getElementById('selected-image-name').innerText = secilenDosya.name;
+                document.getElementById('img-preview-tag').src = URL.createObjectURL(secilenDosya);
+                document.getElementById('selected-image-preview-container').style.display = 'flex';
+            }
+        }
+
+        function gorseliKaldir() {
+            secilenDosya = null;
+            document.getElementById('hidden-file-input').value = '';
+            document.getElementById('selected-image-preview-container').style.display = 'none';
         }
 
         function yeniSohbet() {
             const chatContainer = document.getElementById('chat-container');
             chatContainer.innerHTML = `
                 <div class="message-row ai-row">
-                    <div class="message ai-message">Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?</div>
+                    <div class="message ai-message">Yeni sohbet başlatıldı. Görsel ekleyerek sorularını sorabilirsin!</div>
                 </div>
             `;
-            
-            const historyList = document.getElementById('history-list');
-            const newHistoryItem = document.createElement('div');
-            newHistoryItem.className = 'history-item';
-            newHistoryItem.innerHTML = `
-                <span onclick="aktifSohbetYukle(this)">Yeni Sohbet</span>
-                <button class="delete-chat-btn" onclick="sohbetSil(this, event)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-            `;
-            historyList.prepend(newHistoryItem);
         }
 
         function sohbetSil(buttonElement, event) {
             event.stopPropagation();
-            const item = buttonElement.parentElement;
-            item.remove();
+            buttonElement.parentElement.remove();
         }
 
         function aktifSohbetYukle(spanElement) {
@@ -433,46 +246,43 @@
             `;
         }
 
-        function metniKopyala(buttonElement) {
-            const messageDiv = buttonElement.parentElement.querySelector('.ai-message');
-            const textToCopy = messageDiv.innerText;
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                buttonElement.innerText = 'Kopyalandı!';
-                setTimeout(() => {
-                    buttonElement.innerHTML = `
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Kopyala
-                    `;
-                }, 2000);
-            });
-        }
-
         async function gonder() {
             const inputField = document.getElementById('user-input');
             const chatContainer = document.getElementById('chat-container');
             const sendButton = document.getElementById('send-button');
             const text = inputField.value.trim();
 
-            if (!text) return;
+            if (!text && !secilenDosya) return;
 
             inputField.value = '';
             sendButton.disabled = true;
 
-            chatContainer.innerHTML += `
-                <div class="message-row user-row">
-                    <div class="message user-message">${text}</div>
-                </div>
-            `;
+            // Kullanıcı mesajını arayüze ekle
+            let userHtml = `<div class="message-row user-row"><div class="message user-message">`;
+            if (secilenDosya) {
+                userHtml += `<img src="${URL.createObjectURL(secilenDosya)}" class="uploaded-img-preview-msg">`;
+            }
+            if (text) {
+                userHtml += `<span>${text}</span>`;
+            }
+            userHtml += `</div></div>`;
+            chatContainer.innerHTML += userHtml;
             chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Form data hazırlığı (Backend'e göndermek için)
+            const formData = new FormData();
+            formData.append('mesaj', text || "Bu görseli analiz et.");
+            if (secilenDosya) {
+                formData.append('file', secilenDosya);
+            }
+
+            // Gönderdikten sonra önizlemeyi temizle
+            gorseliKaldir();
 
             const typingId = 'typing-' + Date.now();
             chatContainer.innerHTML += `
                 <div id="${typingId}" class="message-row ai-row typing-container">
-                    <div class="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
                 </div>
             `;
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -480,8 +290,7 @@
             try {
                 const response = await fetch('/yapay-zeka-sor', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mesaj: text }),
+                    body: formData // multipart/form-data gönderiyoruz
                 });
 
                 const data = await response.json();
@@ -490,9 +299,6 @@
                 chatContainer.innerHTML += `
                     <div class="message-row ai-row">
                         <div class="message ai-message">${data.cevap.replace(/\n/g, '<br>')}</div>
-                        <button class="copy-btn" onclick="metniKopyala(this)">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Kopyala
-                        </button>
                     </div>
                 `;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
