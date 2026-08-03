@@ -21,7 +21,7 @@
             overflow: hidden;
         }
 
-        /* Sol Kenar Çubuğu (Sidebar) */
+        /* Sol Kenar Çubuğu (Sidebar) - Başlangıçta Kapalı */
         #sidebar {
             width: 260px;
             background-color: #121212;
@@ -36,22 +36,17 @@
             top: 0;
             height: 100%;
             z-index: 20;
+            transform: translateX(-100%); /* Varsayılan kapalı */
         }
 
-        #sidebar.closed {
-            transform: translateX(-100%);
+        #sidebar.open {
+            transform: translateX(0); /* Açık hali */
         }
 
         .sidebar-top {
             display: flex;
             flex-direction: column;
             gap: 15px;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
         #sidebar-new-chat {
@@ -116,19 +111,19 @@
             background-color: #222;
         }
 
-        /* Ana İçerik Alanı */
+        /* Ana İçerik Alanı - Başlangıçta Tam Ekran */
         #main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100vh;
             position: relative;
-            margin-left: 260px;
+            margin-left: 0; 
             transition: margin-left 0.3s ease;
         }
 
-        #main-content.expanded {
-            margin-left: 0;
+        #main-content.shifted {
+            margin-left: 260px; /* Panel açılınca sağa kayma */
         }
 
         /* Üst Bar */
@@ -347,7 +342,6 @@
                 <span>+ Yeni Sohbet</span>
             </button>
             <div class="chat-history-list" id="history-list">
-                <!-- Örnek Sohbet Geçmişi ve Silme Butonu -->
                 <div class="history-item">
                     <span onclick="aktifSohbetYukle(this)">Yeni Sohbet Başlangıcı</span>
                     <button class="delete-chat-btn" onclick="sohbetSil(this, event)">
@@ -375,7 +369,7 @@
         <!-- Sohbet Akışı -->
         <div id="chat-container">
             <div class="message-row ai-row">
-                <div class="message ai-message">Selam! Kenar çubuğu ve minimalist tasarımla devam ediyoruz. Nasıl yardımcı olabilirim?</div>
+                <div class="message ai-message">Selam! Artık sol menü kapalı başlıyor. Nasıl yardımcı olabilirim?</div>
             </div>
         </div>
 
@@ -394,13 +388,13 @@
             const mainContent = document.getElementById('main-content');
             const toggleBtn = document.getElementById('toggle-sidebar-btn');
 
-            sidebar.classList.toggle('closed');
-            mainContent.classList.toggle('expanded');
+            sidebar.classList.toggle('open');
+            mainContent.classList.toggle('shifted');
 
-            if (sidebar.classList.contains('closed')) {
-                toggleBtn.innerText = '>';
-            } else {
+            if (sidebar.classList.contains('open')) {
                 toggleBtn.innerText = '<';
+            } else {
+                toggleBtn.innerText = '>';
             }
         }
 
@@ -412,7 +406,6 @@
                 </div>
             `;
             
-            // Geçmiş listesine yeni bir tane ekle
             const historyList = document.getElementById('history-list');
             const newHistoryItem = document.createElement('div');
             newHistoryItem.className = 'history-item';
@@ -432,7 +425,6 @@
         }
 
         function aktifSohbetYukle(spanElement) {
-            // İleride geçmiş sohbetleri yüklemek için kullanılabilir
             const chatContainer = document.getElementById('chat-container');
             chatContainer.innerHTML = `
                 <div class="message-row ai-row">
