@@ -1,21 +1,630 @@
 import os
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template_string, request, jsonify, send_from_directory
 from groq import Groq
 
-app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
+app = Flask(__name__)
 
 groq_api_key = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=groq_api_key) if groq_api_key else None
 
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZOLV.AI</title>
+    <link rel="icon" type="image/png" href="/favicon.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="/favicon.png?v=2">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0e0e0e;
+            color: #f1f1f1;
+            display: flex;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: -260px;
+            height: 100%;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #222;
+        }
+
+        .sidebar-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .new-chat-btn {
+            margin: 16px;
+            padding: 10px 16px;
+            background-color: #212121;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #2a2a2a;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 4px;
+        }
+
+        .chat-item:hover {
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        .chat-item.active {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .chat-item span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item .delete-chat {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            display: none;
+            padding: 4px;
+        }
+
+        .chat-item:hover .delete-chat {
+            display: block;
+        }
+
+        .chat-item .delete-chat:hover {
+            color: #ff4d4d;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #222;
+            background-color: #0e0e0e;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-bubble-btn {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-bubble-btn:hover {
+            background-color: #333;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-container img {
+            height: 64px;
+            object-fit: contain;
+        }
+
+        .mode-selector {
+            display: flex;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 3px;
+        }
+
+        .mode-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background-color: #333;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .message {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            gap: 12px;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 75%;
+            word-break: break-word;
+        }
+
+        .message.user .message-bubble {
+            background-color: #212121;
+            color: #fff;
+        }
+
+        .message.ai .message-bubble {
+            background-color: transparent;
+            color: #e0e0e0;
+            padding: 0;
+        }
+
+        .input-container {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(transparent, #0e0e0e 50%);
+        }
+
+        .input-box {
+            max-width: 800px;
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            gap: 10px;
+        }
+
+        .mic-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .mic-btn:hover {
+            color: #fff;
+        }
+
+        .mic-btn.listening {
+            color: #ff4d4d;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .input-box textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 15px;
+            resize: none;
+            max-height: 150px;
+            outline: none;
+            padding: 6px 0;
+        }
+
+        .send-btn {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .send-btn:hover {
+            opacity: 0.8;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>Sohbetler</h3>
+            <button class="close-sidebar" onclick="toggleSidebar()">✕</button>
+        </div>
+        <button class="new-chat-btn" onclick="startNewChat()">+ Yeni Sohbet</button>
+        <div class="chat-list" id="chatList"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="top-left">
+                <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
+                <div class="logo-container">
+                    <img src="/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
+                </div>
+            </div>
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('text', this)">Text AI</button>
+                <button class="mode-btn" onclick="setMode('code', this)">Code AI</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai">
+                <div class="message-bubble">
+                    Selam! ZOLV.AI aktif. Nasıl yardımcı olabilirim?
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-box">
+                <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="Sesli Yaz">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
+                <textarea id="userInput" rows="1" placeholder="Bir şeyler yazın..." onkeydown="handleKey(event)"></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'text';
+        let chats = {};
+        let activeChatId = null;
+
+        function initApp() {
+            startNewChat();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function setMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function startNewChat() {
+            const chatId = 'chat_' + Date.now();
+            chats[chatId] = {
+                title: 'Yeni Sohbet',
+                messages: `
+                    <div class="message ai">
+                        <div class="message-bubble">Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?</div>
+                    </div>
+                `
+            };
+
+            const chatList = document.getElementById('chatList');
+            const newItem = document.createElement('div');
+            newItem.className = 'chat-item';
+            newItem.id = chatId;
+            newItem.innerHTML = `
+                <span onclick="switchChat('${chatId}')">Yeni Sohbet</span>
+                <button class="delete-chat" onclick="deleteChat(event, '${chatId}')" title="Sohbeti Sil">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+            chatList.prepend(newItem);
+            switchChat(chatId);
+        }
+
+        function switchChat(chatId) {
+            activeChatId = chatId;
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const el = document.getElementById(chatId);
+            if (el) el.classList.add('active');
+
+            document.getElementById('chatMessages').innerHTML = chats[chatId].messages;
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        function deleteChat(event, chatId) {
+            event.stopPropagation();
+            delete chats[chatId];
+            document.getElementById(chatId).remove();
+
+            const remainingIds = Object.keys(chats);
+            if (remainingIds.length > 0) {
+                switchChat(remainingIds[remainingIds.length - 1]);
+            } else {
+                startNewChat();
+            }
+        }
+
+        function handleKey(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const prompt = input.value.trim();
+            if (!prompt || !activeChatId) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+
+            chatMessages.innerHTML += `
+                <div class="message user">
+                    <div class="message-bubble">${escapeHtml(prompt)}</div>
+                </div>
+            `;
+            
+            if (chats[activeChatId].title === 'Yeni Sohbet') {
+                chats[activeChatId].title = prompt.length > 20 ? prompt.substring(0, 20) + '...' : prompt;
+                const titleSpan = document.querySelector(`#${activeChatId} span`);
+                if (titleSpan) titleSpan.innerText = chats[activeChatId].title;
+            }
+
+            input.value = '';
+
+            const typingId = 'typing-' + Date.now();
+            chatMessages.innerHTML += `
+                <div class="message ai" id="${typingId}">
+                    <div class="message-bubble">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt, mode: currentMode })
+                });
+
+                const data = await response.json();
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                const aiReply = data.response || data.error || "Bir hata oluştu.";
+                chatMessages.innerHTML += `
+                    <div class="message ai">
+                        <div class="message-bubble">${escapeHtml(aiReply)}</div>
+                    </div>
+                `;
+            } catch (err) {
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+                chatMessages.innerHTML += `
+                    <div class="message ai">
+                        <div class="message-bubble">Bağlantı hatası oluştu.</div>
+                    </div>
+                `;
+            }
+
+            chats[activeChatId].messages = chatMessages.innerHTML;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        let recognition = null;
+        let isListening = false;
+
+        function toggleSpeechRecognition() {
+            const micBtn = document.getElementById('micBtn');
+            const userInput = document.getElementById('userInput');
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Tarayıcınız ses tanıma özelliğini desteklemiyor.");
+                return;
+            }
+
+            if (isListening) {
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'tr-TR';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                isListening = true;
+                micBtn.classList.add('listening');
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = function(event) {
+                stopListening();
+            };
+
+            recognition.onend = function() {
+                stopListening();
+            };
+
+            recognition.start();
+        }
+
+        function stopListening() {
+            isListening = false;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) micBtn.classList.remove('listening');
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
+"""
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template_string(HTML_TEMPLATE)
 
-# Tarayıcı favicon'u doğrudan bulamazsa diye kafaya garantici rota koyuyoruz
 @app.route('/favicon.ico')
 @app.route('/favicon.png')
 def favicon():
     return send_from_directory('.', 'favicon.png', mimetype='image/png')
+
+@app.route('/logo.png')
+def logo():
+    return send_from_directory('.', 'logo.png', mimetype='image/png')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
