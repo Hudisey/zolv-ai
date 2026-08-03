@@ -1,1 +1,1 @@
-web: gunicorn zolv:app
+web: python -m gunicorn zolv:app
