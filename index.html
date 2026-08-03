@@ -160,13 +160,13 @@
             align-items: center;
             justify-content: center;
             padding: 4px;
+            font-weight: bold;
         }
 
-        h1.site-title {
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            color: #fff;
-            margin: 0;
+        /* Logo Stili */
+        .site-logo {
+            height: 28px;
+            object-fit: contain;
             user-select: none;
         }
 
@@ -356,14 +356,14 @@
     <div class="main-content">
         <header>
             <div class="header-left">
-                <button class="menu-toggle-btn" id="sidebar-toggle" title="Menü">&#9776;</button>
-                <h1 class="site-title">ZOLV.AI</h1>
+                <button class="menu-toggle-btn" id="sidebar-toggle" title="Menü">&gt;</button>
+                <img src="/static/logo.png" alt="ZOLV.AI" class="site-logo">
             </div>
         </header>
 
         <div id="chat-container">
             <div class="message ai-message">
-                Selam! Sol alttaki "+" butonundan görsel ekleyebilir, sol üstteki menüden yeni sohbet açabilirsin. Nasıl yardımcı olabilirim?
+                Selam! Sol alttaki "+" butonundan görsel ekleyebilir, menüden yeni sohbet açabilirsin. Nasıl yardımcı olabilirim?
             </div>
         </div>
 
