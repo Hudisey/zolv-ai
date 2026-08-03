@@ -399,7 +399,7 @@ HTML_TEMPLATE = """
 
         <div class="input-container">
             <div class="input-box">
-                <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="Sesli Yaz">
+                <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecording()" title="Sesli Yaz">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                 </button>
                 <textarea id="userInput" rows="1" placeholder="Bir şeyler yazın..." onkeydown="handleKey(event)"></textarea>
@@ -550,78 +550,72 @@ HTML_TEMPLATE = """
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        let recognition = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
         let isListening = false;
-        let manualStop = false;
-        let baseTranscript = '';
 
-        function toggleSpeechRecognition() {
+        async function toggleSpeechRecording() {
             const micBtn = document.getElementById('micBtn');
 
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Tarayıcınız ses tanıma özelliğini desteklemiyor.");
-                return;
-            }
-
             if (isListening) {
-                manualStop = true;
-                if (recognition) recognition.stop();
-                stopListeningUI();
+                // Durdur ve sunucuya gönder
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
                 return;
             }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'tr-TR';
-            recognition.continuous = true;
-            recognition.interimResults = true;
-
-            baseTranscript = document.getElementById('userInput').value;
-            if (baseTranscript && !baseTranscript.endsWith(' ')) {
-                baseTranscript += ' ';
-            }
-
-            recognition.onstart = function() {
-                isListening = true;
-                manualStop = false;
-                micBtn.classList.add('listening');
-            };
-
-            recognition.onresult = function(event) {
-                let currentSessionText = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    currentSessionText += event.results[i][0].transcript;
-                }
-                const inputElement = document.getElementById('userInput');
-                inputElement.value = baseTranscript + currentSessionText;
-            };
-
-            recognition.onerror = function(event) {
-                console.error("Ses tanıma hatası detayı:", event.error);
-                if (event.error === 'not-allowed') {
-                    alert("Mikrofon izni verilmedi! Lütfen tarayıcı adres çubuğundaki kilit simgesine tıklayarak mikrofon iznini aktif et.");
-                } else if (event.error === 'network') {
-                    alert("Ağ hatası: Tarayıcının ses tanıma servisi (Google sunucuları) engellenmiş veya güvenli olmayan bağlantı (HTTP) yüzünden reddedilmiş olabilir.");
-                }
-                stopListeningUI();
-            };
-
-            recognition.onend = function() {
-                if (isListening && !manualStop) {
-                    try {
-                        recognition.start();
-                    } catch(e) {
-                        stopListeningUI();
-                    }
-                } else {
-                    stopListeningUI();
-                }
-            };
 
             try {
-                recognition.start();
-            } catch(e) {
-                console.error("Start hatası:", e);
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    stopListeningUI();
+                    // Ses kaydını durdurduktan sonra audio blob oluştur ve backend'e gönder
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    // Mikrofon stream track'lerini kapat
+                    stream.getTracks().forEach(track => track.stop());
+
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'voice.webm');
+
+                    const inputEl = document.getElementById('userInput');
+                    inputEl.placeholder = "Ses yazılıyor...";
+
+                    try {
+                        const response = await fetch('/api/stt', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.text) {
+                            const currentVal = inputEl.value;
+                            inputEl.value = currentVal ? currentVal + ' ' + data.text : data.text;
+                        } else if (data.error) {
+                            alert("Ses çevriilemedi: " + data.error);
+                        }
+                    } catch (e) {
+                        console.error("STT gönderme hatası:", e);
+                    } finally {
+                        inputEl.placeholder = "Bir şeyler yazın...";
+                    }
+                };
+
+                mediaRecorder.start();
+                isListening = true;
+                micBtn.classList.add('listening');
+
+            } catch (err) {
+                console.error("Mikrofon erişim hatası:", err);
+                alert("Mikrofon izni reddedildi veya cihazda mikrofon bulunamadı!");
                 stopListeningUI();
             }
         }
@@ -656,6 +650,35 @@ def favicon():
 @app.route('/logo.png')
 def logo():
     return send_from_directory('.', 'logo.png', mimetype='image/png')
+
+@app.route('/api/stt', methods=['POST'])
+def speech_to_text():
+    if not client:
+        return jsonify({'error': "GROQ_API_KEY bulunamadı!"})
+    
+    if 'audio' not in request.files:
+        return jsonify({'error': "Ses dosyası bulunamadı."})
+    
+    audio_file = request.files['audio']
+    temp_path = "temp_voice.webm"
+    audio_file.save(temp_path)
+
+    try:
+        with open(temp_path, "rb") as file:
+            translation = client.audio.transcriptions.create(
+                file=(temp_path, file.read()),
+                model="whisper-large-v3",
+                prompt="Konuşma Türkçe dilindedir.",
+                response_format="json",
+                language="tr"
+            )
+        text = translation.text
+        return jsonify({'text': text})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
