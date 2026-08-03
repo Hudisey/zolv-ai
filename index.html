@@ -3,317 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zolv AI</title>
-    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <title>ZOLV.AI</title>
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            margin: 0; padding: 0;
-            background-color: #0d0d0d; color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex; height: 100vh; overflow: hidden;
+            background-color: #0e0e0e;
+            color: #f1f1f1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-        #sidebar {
-            width: 260px; background-color: #121212; border-right: 1px solid #1a1a1a;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 15px; transition: transform 0.3s ease;
-            position: absolute; left: 0; top: 0; height: 100%; z-index: 20;
-            transform: translateX(-100%);
-        }
-        #sidebar.open { transform: translateX(0); }
-        .sidebar-top { display: flex; flex-direction: column; gap: 15px; }
-        #sidebar-new-chat {
-            background-color: #1a1a1a; color: #fff; border: 1px solid #333;
-            padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
-            font-weight: 500; display: flex; align-items: center; justify-content: space-between;
-        }
-        #sidebar-new-chat:hover { background-color: #262626; }
-        .chat-history-list { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; max-height: calc(100vh - 150px); }
-        .history-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #aaa;
-        }
-        .history-item:hover { background-color: #1a1a1a; color: #fff; }
-        .delete-chat-btn { background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; border-radius: 4px; }
-        .delete-chat-btn:hover { color: #ff5555; background-color: #222; }
 
-        #main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; margin-left: 0; transition: margin-left 0.3s ease; }
-        #main-content.shifted { margin-left: 260px; }
+        header {
+            padding: 15px 20px;
+            background-color: #161616;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-        #top-bar {
-            height: 60px; display: flex; justify-content: space-between; align-items: center;
-            padding: 0 25px; background-color: #0d0d0d; border-bottom: 1px solid #1a1a1a; z-index: 10;
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .top-left { display: flex; align-items: center; gap: 15px; }
-        #toggle-sidebar-btn {
-            background: transparent; border: 1px solid #333; color: #ccc; font-size: 16px;
-            width: 36px; height: 36px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+
+        .logo-area img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
         }
-        #toggle-sidebar-btn:hover { background-color: #1a1a1a; color: #fff; }
-        #logo-container img { height: 36px; width: auto; object-fit: contain; }
-        #signature { font-size: 13px; color: #666; font-weight: 500; }
+
+        h1 {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .credits {
+            font-size: 0.8rem;
+            color: #888;
+        }
 
         #chat-container {
-            flex: 1; margin-bottom: 90px; overflow-y: auto; padding: 30px 20px;
-            display: flex; flex-direction: column; gap: 24px; max-width: 800px; width: 100%; align-self: center;
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
         }
-        .message-row { display: flex; flex-direction: column; width: 100%; gap: 6px; }
-        .user-row { align-items: flex-end; }
-        .ai-row { align-items: flex-start; }
-        .message { max-width: 90%; line-height: 1.6; font-size: 15px; word-wrap: break-word; color: #e0e0e0; }
-        .user-message { color: #ffffff; font-weight: 500; }
-        .uploaded-img-preview-msg { max-width: 200px; border-radius: 6px; margin-bottom: 5px; display: block; }
 
-        .typing-container { align-self: flex-start; padding: 5px 0; }
-        .typing-indicator { display: flex; gap: 6px; align-items: center; }
-        .typing-indicator span {
-            width: 7px; height: 7px; background-color: #888; border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-size: 0.95rem;
         }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
-        /* Alt Girdi Alanı */
-        #input-area {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background-color: #0d0d0d; border-top: 1px solid #1a1a1a;
-            padding: 15px 20px; display: flex; justify-content: center; flex-direction: column; align-items: center;
+        .user-message {
+            background-color: #262626;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
         }
-        .input-wrapper-container { max-width: 800px; width: 100%; display: flex; flex-direction: column; background-color: #171717; border: 1px solid #2c2c2c; border-radius: 10px; padding: 8px 12px; }
-        
-        /* Seçilen görselin önizlemesi */
-        #selected-image-preview-container {
-            display: none; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid #252525; margin-bottom: 8px;
-        }
-        #selected-image-preview-container img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
-        #selected-image-name { font-size: 13px; color: #aaa; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .remove-img-btn { background: transparent; border: none; color: #ff5555; cursor: pointer; font-size: 16px; }
 
-        .input-main-row { display: flex; align-items: center; gap: 8px; position: relative; }
-        
-        /* "+" Menüsü ve Butonu */
-        #plus-btn {
-            background: transparent; border: 1px solid #333; color: #ccc; font-size: 18px;
-            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+        .ai-message {
+            background-color: #1a1a1a;
+            color: #e1e1e1;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #2a2a2a;
         }
-        #plus-btn:hover { background-color: #222; color: #fff; }
 
-        #plus-menu {
-            display: none; position: absolute; bottom: 50px; left: 0;
-            background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 30; width: 150px; overflow: hidden;
+        .ai-message img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
         }
-        .plus-menu-item {
-            padding: 10px 14px; font-size: 13px; color: #ddd; cursor: pointer; display: flex; align-items: center; gap: 8px;
+
+        .input-container {
+            background-color: #161616;
+            border-top: 1px solid #222;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
         }
-        .plus-menu-item:hover { background-color: #2a2a2a; color: #fff; }
 
-        #user-input { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; outline: none; padding: 6px; }
-        #send-button { background-color: #333; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
-        #send-button:hover { background-color: #444; }
-        #send-button:disabled { background-color: #222; color: #555; cursor: not-allowed; }
+        #chat-form {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background-color: #222;
+            border-radius: 24px;
+            padding: 6px 12px;
+            border: 1px solid #333;
+            gap: 10px;
+        }
 
-        #chat-container::-webkit-scrollbar { width: 6px; }
-        #chat-container::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+        #chat-form:focus-within {
+            border-color: #555;
+        }
+
+        .upload-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .upload-btn:hover {
+            color: #fff;
+        }
+
+        #message-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            padding: 8px 0;
+        }
+
+        #message-input::placeholder {
+            color: #666;
+        }
+
+        #send-btn {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        #send-btn:hover {
+            opacity: 0.85;
+        }
+
+        #file-preview {
+            display: none;
+            font-size: 0.8rem;
+            color: #4CAF50;
+            padding: 0 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        @media (max-width: 768px) {
+            /* Mobilde alt paneli ve giris alanini telefon tuslarinin ustunde kalacak sekilde yukari kaldirir */
+            .input-container {
+                padding-bottom: env(safe-area-inset-bottom, 25px);
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <div class="sidebar-top">
-            <button id="sidebar-new-chat" onclick="yeniSohbet()">
-                <span>+ Yeni Sohbet</span>
-            </button>
-            <div class="chat-history-list" id="history-list">
-                <div class="history-item">
-                    <span onclick="aktifSohbetYukle(this)">Yeni Sohbet Başlangıcı</span>
-                    <button class="delete-chat-btn" onclick="sohbetSil(this, event)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                </div>
-            </div>
+    <header>
+        <div class="logo-area">
+            <img src="/logo.png" alt="Logo">
+            <h1>ZOLV.AI</h1>
         </div>
-        <div style="font-size: 12px; color: #555; text-align: center; padding-bottom: 5px;">Zolv AI v2.0</div>
+        <div class="credits">Made by Hudisey</div>
+    </header>
+
+    <div id="chat-container">
+        <div class="message ai-message">
+            Selam! Artık sol alttaki "+" butonundan "Görsel ekle" diyerek bana resim gönderebilirsin. Nasıl yardımcı olabilirim?
+        </div>
     </div>
 
-    <div id="main-content">
-        <div id="top-bar">
-            <div class="top-left">
-                <button id="toggle-sidebar-btn" onclick="sidebarToggle()">></button>
-                <div id="logo-container">
-                    <img src="/static/logo.png" alt="Zolv.ai">
-                </div>
-            </div>
-            <div id="signature">Made by Hudisey</div>
-        </div>
-
-        <div id="chat-container">
-            <div class="message-row ai-row">
-                <div class="message ai-message">Selam! Artık sol alttaki "+" butonundan "Görsel ekle" diyerek bana resim gönderebilirsin. Nasıl yardımcı olabilirim?</div>
-            </div>
-        </div>
-
-        <div id="input-area">
-            <div class="input-wrapper-container">
-                <!-- Görsel Önizleme Alanı -->
-                <div id="selected-image-preview-container">
-                    <img id="img-preview-tag" src="" alt="Önizleme">
-                    <span id="selected-image-name">dosya.jpg</span>
-                    <button class="remove-img-btn" onclick="gorseliKaldir()">&times;</button>
-                </div>
-
-                <div class="input-main-row">
-                    <!-- Gizli Dosya Seçici -->
-                    <input type="file" id="hidden-file-input" accept="image/*" style="display: none;" onchange="dosyaSecildi(this)">
-                    
-                    <!-- "+" Butonu ve Menüsü -->
-                    <button id="plus-btn" onclick="plusMenuToggle()">+</button>
-                    <div id="plus-menu">
-                        <div class="plus-menu-item" onclick="document.getElementById('hidden-file-input').click(); plusMenuToggle();">
-                            📷 Görsel ekle
-                        </div>
-                    </div>
-
-                    <input type="text" id="user-input" placeholder="Bir şeyler yazın...">
-                    <button id="send-button" onclick="gonder()">Gönder</button>
-                </div>
-            </div>
-        </div>
+    <div class="input-container">
+        <form id="chat-form">
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <button type="button" class="upload-btn" id="upload-trigger" title="Gorsel Ekle">+</button>
+            <span id="file-preview"></span>
+            <input type="text" id="message-input" placeholder="Bir seyler yazin..." autocomplete="off">
+            <button type="submit" id="send-btn">&#10148;</button>
+        </form>
     </div>
 
     <script>
-        let secilenDosya = null;
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const imageInput = document.getElementById('image-input');
+        const uploadTrigger = document.getElementById('upload-trigger');
+        const filePreview = document.getElementById('file-preview');
 
-        function sidebarToggle() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            const toggleBtn = document.getElementById('toggle-sidebar-btn');
-            sidebar.classList.toggle('open');
-            mainContent.classList.toggle('shifted');
-            toggleBtn.innerText = sidebar.classList.contains('open') ? '<' : '>';
-        }
+        let selectedFile = null;
 
-        function plusMenuToggle() {
-            const menu = document.getElementById('plus-menu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
+        uploadTrigger.addEventListener('click', () => {
+            imageInput.click();
+        });
 
-        window.onclick = function(event) {
-            if (!event.target.matches('#plus-btn') && !event.target.closest('#plus-menu')) {
-                document.getElementById('plus-menu').style.display = 'none';
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                selectedFile = e.target.files[0];
+                filePreview.textContent = selectedFile.name;
+                filePreview.style.display = 'inline';
             }
-        }
+        });
 
-        function dosyaSecildi(input) {
-            if (input.files && input.files[0]) {
-                secilenDosya = input.files[0];
-                document.getElementById('selected-image-name').innerText = secilenDosya.name;
-                document.getElementById('img-preview-tag').src = URL.createObjectURL(secilenDosya);
-                document.getElementById('selected-image-preview-container').style.display = 'flex';
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            if (!text && !selectedFile) return;
+
+            // Kullanici mesaji ekleme
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user-message';
+            userMsgDiv.textContent = text;
+            
+            if (selectedFile) {
+                const imgThumb = document.createElement('img');
+                imgThumb.src = URL.createObjectURL(selectedFile);
+                userMsgDiv.appendChild(imgThumb);
             }
-        }
-
-        function gorseliKaldir() {
-            secilenDosya = null;
-            document.getElementById('hidden-file-input').value = '';
-            document.getElementById('selected-image-preview-container').style.display = 'none';
-        }
-
-        function yeniSohbet() {
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.innerHTML = `
-                <div class="message-row ai-row">
-                    <div class="message ai-message">Yeni sohbet başlatıldı. Görsel ekleyerek sorularını sorabilirsin!</div>
-                </div>
-            `;
-        }
-
-        function sohbetSil(buttonElement, event) {
-            event.stopPropagation();
-            buttonElement.parentElement.remove();
-        }
-
-        function aktifSohbetYukle(spanElement) {
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.innerHTML = `
-                <div class="message-row ai-row">
-                    <div class="message ai-message">Bu sohbet yüklendi: ${spanElement.innerText}</div>
-                </div>
-            `;
-        }
-
-        async function gonder() {
-            const inputField = document.getElementById('user-input');
-            const chatContainer = document.getElementById('chat-container');
-            const sendButton = document.getElementById('send-button');
-            const text = inputField.value.trim();
-
-            if (!text && !secilenDosya) return;
-
-            inputField.value = '';
-            sendButton.disabled = true;
-
-            let userHtml = `<div class="message-row user-row"><div class="message user-message">`;
-            if (secilenDosya) {
-                userHtml += `<img src="${URL.createObjectURL(secilenDosya)}" class="uploaded-img-preview-msg">`;
-            }
-            if (text) {
-                userHtml += `<span>${text}</span>`;
-            }
-            userHtml += `</div></div>`;
-            chatContainer.innerHTML += userHtml;
+            
+            chatContainer.appendChild(userMsgDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             const formData = new FormData();
-            formData.append('mesaj', text || "Bu görseli analiz et.");
-            if (secilenDosya) {
-                formData.append('file', secilenDosya);
+            formData.append('message', text);
+            if (selectedFile) {
+                formData.append('file', selectedFile);
             }
 
-            gorseliKaldir();
+            // Inputlari temizle
+            messageInput.value = '';
+            imageInput.value = '';
+            filePreview.style.display = 'none';
+            selectedFile = null;
 
-            const typingId = 'typing-' + Date.now();
-            chatContainer.innerHTML += `
-                <div id="${typingId}" class="message-row ai-row typing-container">
-                    <div class="typing-indicator"><span></span><span></span><span></span></div>
-                </div>
-            `;
+            // Yapay zeka yukleniyor mesaji
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'message ai-message';
+            aiMsgDiv.textContent = 'Dusunuyor...';
+            chatContainer.appendChild(aiMsgDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             try {
-                const response = await fetch('/yapay-zeka-sor', {
+                const response = await fetch('/chat', {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-                document.getElementById(typingId).remove();
-
-                chatContainer.innerHTML += `
-                    <div class="message-row ai-row">
-                        <div class="message ai-message">${data.cevap.replace(/\n/g, '<br>')}</div>
-                    </div>
-                `;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            } catch (error) {
-                document.getElementById(typingId).remove();
-                chatContainer.innerHTML += `
-                    <div class="message-row ai-row">
-                        <div class="message ai-message" style="color:#ff5555;">Bağlantı hatası oluştu.</div>
-                    </div>
-                `;
-            } finally {
-                sendButton.disabled = false;
-                inputField.focus();
+                if (response.ok) {
+                    aiMsgDiv.textContent = data.reply;
+                } else {
+                    aiMsgDiv.textContent = 'Bir hata olustu: ' + (data.detail || 'Bilinmeyen hata');
+                }
+            } catch (err) {
+                aiMsgDiv.textContent = 'Sunucuya baglanirken hata olustu.';
             }
-        }
 
-        document.getElementById('user-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') gonder();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         });
     </script>
 </body>
