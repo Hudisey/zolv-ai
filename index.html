@@ -179,19 +179,11 @@
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 8px;
         }
 
         .logo-container img {
-            height: 26px;
+            height: 32px;
             object-fit: contain;
-        }
-
-        .logo-text {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            color: #fff;
         }
 
         .mode-selector {
@@ -349,8 +341,7 @@
             <div class="top-left">
                 <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
                 <div class="logo-container">
-                    <img src="/static/logo.png" alt="Logo" onerror="this.style.display='none'">
-                    <span class="logo-text">ZOLV.AI</span>
+                    <img src="/static/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
                 </div>
             </div>
             <div class="mode-selector">
@@ -465,7 +456,6 @@
                 </div>
             `;
             
-            // İlk mesajda sol menüdeki başlığı güncelle
             if (chats[activeChatId].title === 'Yeni Sohbet') {
                 chats[activeChatId].title = prompt.length > 20 ? prompt.substring(0, 20) + '...' : prompt;
                 const titleSpan = document.querySelector(`#${activeChatId} span`);
