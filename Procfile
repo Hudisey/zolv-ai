@@ -1,1 +1,1 @@
-web: gunicorn zolv:app
+web: uvicorn zolv:app --host 0.0.0.0 --port $PORT
