@@ -5,7 +5,6 @@ from groq import Groq
 
 app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
 
-# Groq API anahtarını alıyoruz (Text ve Code için)
 groq_api_key = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=groq_api_key) if groq_api_key else None
 
@@ -20,17 +19,17 @@ def chat():
     mode = data.get('mode', 'text')
     
     try:
-        # 1. GÖRSEL ÜRETME MODU (Image AI)
+        # GÖRSEL MODU: Doğrudan HTML resmi döner
         if mode == 'image':
             encoded_prompt = urllib.parse.quote(prompt)
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-            ai_response = f"İşte senin için ürettiğim görsel:<br><br><img src='{image_url}' alt='{prompt}' style='max-width:100%; border-radius:12px; margin-top:10px;'>"
+            ai_response = f"İşte senin için ürettiğim görsel:<br><br><img src='{image_url}' alt='{prompt}' style='max-width:100%; border-radius:12px; margin-top:10px; display:block;'>"
             return jsonify({'response': ai_response})
 
-        # 2. METİN VE KOD MODLARI (Text AI / Code AI - Groq Llama 3.3)
         if not client:
             return jsonify({'response': "Hata: GROQ_API_KEY ortam değişkeni bulunamadı!"})
 
+        # METİN VE KOD MODLARI (Groq)
         system_prompts = {
             'text': "Sen ZOLV.AI adında akıllı, samimi ve yardımsever bir yapay zeka asistanısın.",
             'code': "Sen uzman bir yazılım mühendisisin. Sorulara net, temiz kod blokları ve teknik açıklamalarla yanıt verirsin."
