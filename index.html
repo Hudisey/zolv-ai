@@ -95,6 +95,12 @@
             color: #fff;
         }
 
+        .history-item.active {
+            background-color: #1f1f1f;
+            color: #fff;
+            border-left: 3px solid #fff;
+        }
+
         .delete-chat-btn {
             background: none;
             border: none;
@@ -402,6 +408,7 @@
 
         let selectedFile = null;
         let chatHistories = JSON.parse(localStorage.getItem('zolv_chats')) || [];
+        let currentChatIndex = null;
 
         sidebarToggle.addEventListener('click', () => {
             sidebar.classList.add('open');
@@ -410,23 +417,37 @@
 
         function closeSidebar() {
             sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+            overlay.classList.add('active');
         }
 
         sidebarClose.addEventListener('click', closeSidebar);
         overlay.addEventListener('click', closeSidebar);
 
-        newChatBtn.addEventListener('click', () => {
-            const newChatTitle = `Sohbet ${chatHistories.length + 1}`;
-            chatHistories.unshift({ title: newChatTitle });
-            localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+        function loadChatToScreen(index) {
+            currentChatIndex = index;
+            chatContainer.innerHTML = '';
+            const chat = chatHistories[index];
+            
+            if (chat.messages && chat.messages.length > 0) {
+                chat.messages.forEach(msg => {
+                    appendMessageToDOM(msg.content, msg.isUser, msg.imgSrc);
+                });
+            } else {
+                chatContainer.innerHTML = `
+                    <div class="message ai-message">
+                        Bu sohbet boş. Nasıl yardımcı olabilirim?
+                    </div>
+                `;
+            }
             renderHistory();
+        }
 
-            chatContainer.innerHTML = `
-                <div class="message ai-message">
-                    Yeni bir sohbet başlatıldı. Nasıl yardımcı olabilirim?
-                </div>
-            `;
+        newChatBtn.addEventListener('click', () => {
+            const newChat = { title: `Sohbet ${chatHistories.length + 1}`, messages: [] };
+            chatHistories.unshift(newChat);
+            localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+            
+            loadChatToScreen(0);
             closeSidebar();
         });
 
@@ -438,7 +459,7 @@
             }
             chatHistories.forEach((chat, index) => {
                 const item = document.createElement('div');
-                item.className = 'history-item';
+                item.className = `history-item ${currentChatIndex === index ? 'active' : ''}`;
                 
                 const titleSpan = document.createElement('span');
                 titleSpan.textContent = chat.title;
@@ -448,6 +469,7 @@
                 titleSpan.style.flex = '1';
                 
                 titleSpan.addEventListener('click', () => {
+                    loadChatToScreen(index);
                     closeSidebar();
                 });
 
@@ -466,6 +488,12 @@
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     chatHistories.splice(index, 1);
+                    if (currentChatIndex === index) {
+                        currentChatIndex = null;
+                        chatContainer.innerHTML = '<div class="message ai-message">Yeni bir sohbet başlatabilir veya sol menüden bir sohbet seçebilirsin.</div>';
+                    } else if (currentChatIndex > index) {
+                        currentChatIndex--;
+                    }
                     localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
                     renderHistory();
                 });
@@ -493,7 +521,7 @@
             }
         });
 
-        function appendMessage(content, isUser, file = null) {
+        function appendMessageToDOM(content, isUser, imgSrc = null) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
             
@@ -503,16 +531,11 @@
                 msgDiv.appendChild(textP);
             }
 
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = "Yüklenen görsel";
-                    msgDiv.appendChild(img);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                };
-                reader.readAsDataURL(file);
+            if (imgSrc) {
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                img.alt = "Görsel";
+                msgDiv.appendChild(img);
             }
             
             chatContainer.appendChild(msgDiv);
@@ -526,7 +549,31 @@
 
             if (!text && !file) return;
 
-            appendMessage(text, true, file);
+            if (currentChatIndex === null) {
+                chatHistories.unshift({ title: text.substring(0, 20) || "Yeni Sohbet", messages: [] });
+                currentChatIndex = 0;
+            }
+
+            let fileBase64 = null;
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                await new Promise(resolve => {
+                    reader.onload = function(e) {
+                        fileBase64 = e.target.result;
+                        resolve();
+                    };
+                });
+            }
+
+            appendMessageToDOM(text, true, fileBase64);
+            chatHistories[currentChatIndex].messages.push({ content: text, isUser: true, imgSrc: fileBase64 });
+            
+            if (chatHistories[currentChatIndex].title.startsWith("Sohbet ")) {
+                chatHistories[currentChatIndex].title = text.substring(0, 22) || "Sohbet";
+            }
+            localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+            renderHistory();
 
             const formData = new FormData();
             if (text) formData.append('message', text);
@@ -557,6 +604,8 @@
                 const data = await response.json();
                 if (response.ok) {
                     aiMsgDiv.textContent = data.reply;
+                    chatHistories[currentChatIndex].messages.push({ content: data.reply, isUser: false, imgSrc: null });
+                    localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
                 } else {
                     aiMsgDiv.textContent = 'Bir hata oluştu: ' + (data.detail || 'Bilinmeyen hata');
                 }
