@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZOLV.AI</title>
+    <!-- Favicon Ekleme -->
+    <link rel="icon" href="/favicon.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -36,10 +38,14 @@
             gap: 10px;
         }
 
+        /* Logo'nun koyu arka planda görünmesi için stil eklemesi */
         .logo-area img {
-            width: 28px;
-            height: 28px;
+            height: 32px;
+            width: auto;
             object-fit: contain;
+            background-color: #222; /* Logonun arkasına hafif bir kontrast kutusu koyar */
+            padding: 4px 8px;
+            border-radius: 6px;
         }
 
         h1 {
