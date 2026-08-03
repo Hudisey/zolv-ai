@@ -147,6 +147,7 @@
             border: none;
             color: #fff;
             font-size: 20px;
+            font-weight: bold;
             cursor: pointer;
         }
 
@@ -157,8 +158,15 @@
         }
 
         .logo-container img {
-            height: 28px;
+            height: 26px;
             object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #fff;
         }
 
         .mode-selector {
@@ -319,9 +327,10 @@
     <div class="main-container">
         <div class="top-bar">
             <div class="top-left">
-                <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                <button class="menu-btn" onclick="toggleSidebar()">&gt;</button>
                 <div class="logo-container">
-                    <img src="/logo.png" alt="ZOLV.AI">
+                    <img src="/logo.png" alt="" onerror="this.style.display='none'">
+                    <span class="logo-text">ZOLV.AI</span>
                 </div>
             </div>
             <div class="mode-selector">
@@ -389,7 +398,6 @@
 
             const chatMessages = document.getElementById('chatMessages');
 
-            // Kullanıcı mesajı
             chatMessages.innerHTML += `
                 <div class="message user">
                     <div class="message-bubble">${escapeHtml(prompt)}</div>
@@ -397,7 +405,6 @@
             `;
             input.value = '';
 
-            // 3 noktalı typing baloncuk
             const typingId = 'typing-' + Date.now();
             chatMessages.innerHTML += `
                 <div class="message ai" id="${typingId}">
