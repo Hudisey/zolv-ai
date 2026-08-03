@@ -49,7 +49,6 @@
             justify-content: space-between;
         }
 
-        /* İstediğin gibi Çerçeveli Yeni Sohbet Butonu */
         .new-chat-btn {
             background-color: transparent;
             color: #fff;
@@ -110,12 +109,12 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s;
-            opacity: 0.6; /* Normalde biraz soluk */
+            opacity: 0.6;
         }
 
         .delete-chat-btn:hover {
             background-color: rgba(255, 77, 77, 0.15);
-            opacity: 1; /* Üzerine gelince netleşir */
+            opacity: 1;
         }
 
         #overlay {
@@ -158,7 +157,6 @@
             gap: 12px;
         }
 
-        /* Kare içine alınmış '>' butonu */
         .menu-toggle-btn {
             background-color: #222;
             border: 1px solid #333;
@@ -180,7 +178,6 @@
             border-color: #555;
         }
 
-        /* Logo 2 Kat Büyütüldü */
         .site-logo {
             height: 56px;
             object-fit: contain;
@@ -199,7 +196,6 @@
             margin: 0 auto;
         }
 
-        /* Baloncuklar Kaldırıldı, Düz Metin Akışı */
         .message {
             max-width: 90%;
             line-height: 1.5;
@@ -236,7 +232,6 @@
             margin-left: auto;
         }
 
-        /* 3 Nokta Düşünme Efekti */
         .typing-indicator {
             display: flex;
             align-items: center;
@@ -260,7 +255,6 @@
             40% { transform: scale(1.0); }
         }
 
-        /* Input Alanı */
         .input-container {
             background-color: #161616;
             border-top: 1px solid #222;
@@ -386,4 +380,190 @@
         <div class="input-container">
             <form id="chat-form" enctype="multipart/form-data">
                 <input type="file" id="image-input" name="file" accept="image/*" style="display: none;">
-                <button type="button" class="upload-btn"
+                <button type="button" class="upload-btn" id="upload-trigger" title="Görsel Ekle">+</button>
+                <span id="file-preview"></span>
+                <input type="text" id="message-input" name="message" placeholder="Bir şeyler yazın..." autocomplete="off">
+                <button type="submit" id="send-btn" title="Gönder">&#10148;</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const imageInput = document.getElementById('image-input');
+        const uploadTrigger = document.getElementById('upload-trigger');
+        const filePreview = document.getElementById('file-preview');
+        
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const overlay = document.getElementById('overlay');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const historyList = document.getElementById('history-list');
+
+        let selectedFile = null;
+        let chatHistories = JSON.parse(localStorage.getItem('zolv_chats')) || [];
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        sidebarClose.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+
+        newChatBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = `
+                <div class="message ai-message">
+                    Yeni bir sohbet başlatıldı. Nasıl yardımcı olabilirim?
+                </div>
+            `;
+            closeSidebar();
+        });
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (chatHistories.length === 0) {
+                historyList.innerHTML = '<div style="color: #666; font-size: 0.8rem; padding: 10px; text-align: center;">Geçmiş sohbet yok</div>';
+                return;
+            }
+            chatHistories.forEach((chat, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = chat.title || `Sohbet ${index + 1}`;
+                titleSpan.style.overflow = 'hidden';
+                titleSpan.style.textOverflow = 'ellipsis';
+                titleSpan.style.whiteSpace = 'nowrap';
+                titleSpan.style.flex = '1';
+                
+                titleSpan.addEventListener('click', () => {
+                    closeSidebar();
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-chat-btn';
+                deleteBtn.title = 'Sohbeti Sil';
+                deleteBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                `;
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    chatHistories.splice(index, 1);
+                    localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+                    renderHistory();
+                });
+
+                item.appendChild(titleSpan);
+                item.appendChild(deleteBtn);
+                historyList.appendChild(item);
+            });
+        }
+        renderHistory();
+
+        uploadTrigger.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                selectedFile = e.target.files[0];
+                filePreview.textContent = selectedFile.name;
+                filePreview.style.display = 'inline';
+            } else {
+                selectedFile = null;
+                filePreview.style.display = 'none';
+                filePreview.textContent = '';
+            }
+        });
+
+        function appendMessage(content, isUser, file = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            if (content) {
+                const textP = document.createElement('p');
+                textP.textContent = content;
+                msgDiv.appendChild(textP);
+            }
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = "Yüklenen görsel";
+                    msgDiv.appendChild(img);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            const file = imageInput.files[0];
+
+            if (!text && !file) return;
+
+            appendMessage(text, true, file);
+
+            const formData = new FormData();
+            if (text) formData.append('message', text);
+            if (file) formData.append('file', file);
+
+            messageInput.value = '';
+            imageInput.value = '';
+            filePreview.style.display = 'none';
+            selectedFile = null;
+
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'message ai-message';
+            
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            aiMsgDiv.appendChild(typingIndicator);
+            
+            chatContainer.appendChild(aiMsgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    aiMsgDiv.textContent = data.reply;
+                } else {
+                    aiMsgDiv.textContent = 'Bir hata oluştu: ' + (data.detail || 'Bilinmeyen hata');
+                }
+            } catch (err) {
+                aiMsgDiv.textContent = 'Sunucuya bağlanırken bir hata oluştu.';
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    </script>
+</body>
+</html>
