@@ -108,6 +108,7 @@
             color: #888;
             cursor: pointer;
             display: none;
+            padding: 4px;
         }
 
         .chat-item:hover .delete-chat {
@@ -142,13 +143,24 @@
             gap: 12px;
         }
 
-        .menu-btn {
-            background: none;
-            border: none;
+        .menu-bubble-btn {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
             color: #fff;
-            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-bubble-btn:hover {
+            background-color: #333;
         }
 
         .logo-container {
@@ -158,7 +170,7 @@
         }
 
         .logo-container img {
-            height: 26px;
+            height: 28px;
             object-fit: contain;
         }
 
@@ -319,7 +331,9 @@
         <div class="chat-list" id="chatList">
             <div class="chat-item">
                 <span>Sohbet 1</span>
-                <button class="delete-chat" onclick="deleteChat(event)">🗑</button>
+                <button class="delete-chat" onclick="deleteChat(event)" title="Sohbeti Sil">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
             </div>
         </div>
     </div>
@@ -327,7 +341,7 @@
     <div class="main-container">
         <div class="top-bar">
             <div class="top-left">
-                <button class="menu-btn" onclick="toggleSidebar()">&gt;</button>
+                <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
                 <div class="logo-container">
                     <img src="/logo.png" alt="" onerror="this.style.display='none'">
                     <span class="logo-text">ZOLV.AI</span>
