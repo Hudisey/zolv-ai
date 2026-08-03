@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZOLV.AI</title>
-    <!-- Favicon Ekleme -->
+    <!-- Favicon Ekleme (Bunu da ekledim, doğru favicon.png dosyanı ana dizine yükle) -->
     <link rel="icon" href="/favicon.png" type="image/png">
     <style>
         * {
@@ -38,9 +38,9 @@
             gap: 10px;
         }
 
-        /* Logo'nun koyu arka planda görünmesi için stil eklemesi */
+        /* LOGO DÜZELTMELERİ - BURASI ÖNEMLİ */
         .logo-area img {
-            height: 32px;
+            height: 32px; /* Logoyu uygun boyuta küçültür */
             width: auto;
             object-fit: contain;
             background-color: #222; /* Logonun arkasına hafif bir kontrast kutusu koyar */
@@ -52,6 +52,7 @@
             font-size: 1.1rem;
             letter-spacing: 1px;
             color: #fff;
+            margin: 0; /* Fazla boşluğu alır */
         }
 
         .credits {
@@ -198,6 +199,7 @@
 
     <header>
         <div class="logo-area">
+            <!-- DOGRU DOSYA YOLU -->
             <img src="/logo.png" alt="Logo">
             <h1>ZOLV.AI</h1>
         </div>
