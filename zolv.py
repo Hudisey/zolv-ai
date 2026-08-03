@@ -1,13 +1,13 @@
 import os
 import urllib.parse
 from flask import Flask, render_template, request, jsonify
-import google.generativeai as genai
+from groq import Groq
 
 app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
 
-gemini_api_key = os.environ.get("GEMINI_API_KEY")
-if gemini_api_key:
-    genai.configure(api_key=gemini_api_key)
+# Groq API anahtarını alıyoruz (Text ve Code için)
+groq_api_key = os.environ.get("GROQ_API_KEY")
+client = Groq(api_key=groq_api_key) if groq_api_key else None
 
 @app.route('/')
 def index():
@@ -27,25 +27,28 @@ def chat():
             ai_response = f"İşte senin için ürettiğim görsel:<br><br><img src='{image_url}' alt='{prompt}' style='max-width:100%; border-radius:12px; margin-top:10px;'>"
             return jsonify({'response': ai_response})
 
-        if not gemini_api_key:
-            return jsonify({'response': "Hata: GEMINI_API_KEY ortam değişkeni bulunamadı!"})
+        # 2. METİN VE KOD MODLARI (Text AI / Code AI - Groq Llama 3.3)
+        if not client:
+            return jsonify({'response': "Hata: GROQ_API_KEY ortam değişkeni bulunamadı!"})
 
-        # 2. METİN VE KOD MODLARI (Text AI / Code AI)
-        system_instructions = {
+        system_prompts = {
             'text': "Sen ZOLV.AI adında akıllı, samimi ve yardımsever bir yapay zeka asistanısın.",
             'code': "Sen uzman bir yazılım mühendisisin. Sorulara net, temiz kod blokları ve teknik açıklamalarla yanıt verirsin."
         }
         
-        sys_prompt = system_instructions.get(mode, system_instructions['text'])
+        sys_prompt = system_prompts.get(mode, system_prompts['text'])
 
-        model = genai.GenerativeModel(
-            model_name='gemini-2.5-flash',
-            system_instruction=sys_prompt
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2048,
         )
         
-        response = model.generate_content(prompt)
-        ai_response = response.text
-        
+        ai_response = completion.choices[0].message.content
         return jsonify({'response': ai_response})
 
     except Exception as e:
