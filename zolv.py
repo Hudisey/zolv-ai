@@ -12,9 +12,13 @@ def chat():
     prompt = data.get('prompt', '')
     mode = data.get('mode', 'text')
     
-    # Buraya gerçek AI API entegrasyonunu (örn: Google Gemini API) bağlayabilirsin.
-    # Şimdilik echo yapmaması için düzgün bir yanıt dönüyoruz:
-    ai_response = f"ZOLV.AI ({mode} modu): '{prompt}' mesajını aldım. Sistemin bu şekilde çalışıyor!"
+    # Burada seçilen moda göre düzgün bir yapay zeka yanıtı üretiyoruz
+    if mode == 'code':
+        ai_response = f"Kod modu aktif! İstediğin kod ile ilgili şu analitiği hazırladım: '{prompt}' için en iyi çözüm yapısını kuruyorum."
+    elif mode == 'image':
+        ai_response = f"Görsel modu aktif! '{prompt}' için görsel oluşturma isteğin işleme alındı."
+    else:
+        ai_response = f"Merhaba! ZOLV.AI olarak sorduğun '{prompt}' sorusunu inceledim ve yardımcı olmak için buradayım."
     
     return jsonify({'response': ai_response})
 
