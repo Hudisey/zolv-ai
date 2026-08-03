@@ -1,44 +1,55 @@
 import os
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from flask import Flask, jsonify, request
 from groq import Groq
+import google.generativeai as genai
 
-app = FastAPI()
+app = Flask(__name__)
 
-# Render.com Environment Variables'tan Groq API Key'i güvenle çekiyoruz
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-try:
-    app.mount("/static", StaticFiles(directory="."), name="static")
-except Exception as e:
-    print(f"StaticFiles mount hatası: {e}")
 
-@app.get("/", response_class=HTMLResponse)
-async def read_index():
-    file_path = "index.html"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    return HTMLResponse(content="<h1>index.html bulunamadı!</h1>", status_code=404)
+@app.route("/api/chat", methods=["POST"])
+def chat():
+  data = request.json
+  prompt = data.get("prompt")
+  mode = data.get("mode", "text")
 
-@app.post("/chat")
-async def chat_endpoint(message: str = Form(None), file: UploadFile = File(None)):
-    try:
-        user_msg = message if message else "Merhaba"
-        
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_msg,
-                }
-            ],
-            model="llama-3.1-8b-instant",
-        )
-        
-        ai_reply = chat_completion.choices[0].message.content
-        return JSONResponse(content={"reply": ai_reply}, status_code=200)
-        
-    except Exception as e:
-        return JSONResponse(content={"detail": str(e)}, status_code=500)
+  try:
+    if mode == "text":
+      res = groq_client.chat.completions.create(
+          model="llama-3.3-70b-versatile",
+          messages=[{"role": "user", "content": prompt}],
+      )
+      return jsonify({"response": res.choices[0].message.content})
+
+    elif mode == "code":
+      res = groq_client.chat.completions.create(
+          model="llama-3.3-70b-versatile",
+          messages=[
+              {
+                  "role": "system",
+                  "content": (
+                      "Sen kıdemli bir yazılım mühendisisin. Sadece temiz kod"
+                      " üret."
+                  ),
+              },
+              {"role": "user", "content": prompt},
+          ],
+      )
+      return jsonify({"response": res.choices[0].message.content})
+
+    elif mode == "image":
+      model = genai.GenerativeModel("gemini-1.5-flash")
+      res = model.generate_content(
+          f"Görsel için detaylı prompt oluştur: {prompt}"
+      )
+      return jsonify({"response": res.text})
+
+    return jsonify({"error": "Geçersiz mod!"}), 400
+  except Exception as e:
+    return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+  app.run(debug=True)
