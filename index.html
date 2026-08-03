@@ -20,7 +20,7 @@
             overflow: hidden;
         }
 
-        /* Üst Bar (Logo sol, İmza sağ) */
+        /* Üst Bar */
         #top-bar {
             position: absolute;
             top: 0;
@@ -87,6 +87,34 @@
             border: 1px solid #222;
         }
 
+        /* Kutucuksuz 3 Nokta Animasyonu */
+        .typing-container {
+            align-self: flex-start;
+            padding: 5px 10px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
         /* Alt Giriş Alanı */
         #input-area {
             position: absolute;
@@ -142,30 +170,6 @@
             cursor: not-allowed;
         }
 
-        /* Yazıyor... (3 Nokta Animasyonu) */
-        .typing-indicator {
-            display: flex;
-            gap: 5px;
-            padding: 10px 4px;
-            align-items: center;
-        }
-
-        .typing-indicator span {
-            width: 7px;
-            height: 7px;
-            background-color: #777;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
-        }
-
         /* Scrollbar */
         #chat-container::-webkit-scrollbar {
             width: 6px;
@@ -181,7 +185,8 @@
     <!-- Üst Menü -->
     <div id="top-bar">
         <div id="logo-container">
-            <img src="logo.png" alt="Zolv.ai">
+            <!-- GitHub'daki tam dosya adın: logo.png -->
+            <img src="logo.png" alt="Zolv.ai" onerror="this.src='Logo.png'; this.onerror=null;">
         </div>
         <div id="signature">Made by Hudisey</div>
     </div>
@@ -189,7 +194,7 @@
     <!-- Sohbet Akışı -->
     <div id="chat-container">
         <div class="message ai-message">
-            Selam! Minimalist ve şık tarzımızla hazırız. Nasıl yardımcı olabilirim?
+            Selam! Minimalist tasarıma geçtik. Nasıl yardımcı olabilirim?
         </div>
     </div>
 
@@ -217,10 +222,10 @@
             chatContainer.innerHTML += `<div class="message user-message">${text}</div>`;
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // Düşünüyor animasyonu ekle (3 nokta)
+            // Kutucuksuz sadece 3 nokta animasyonu ekle
             const typingId = 'typing-' + Date.now();
             chatContainer.innerHTML += `
-                <div id="${typingId}" class="message ai-message">
+                <div id="${typingId}" class="typing-container">
                     <div class="typing-indicator">
                         <span></span>
                         <span></span>
