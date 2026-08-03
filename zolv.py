@@ -190,6 +190,12 @@ HTML_TEMPLATE = """
             background-color: #333;
         }
 
+        .logo-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
         .logo-container {
             display: flex;
             align-items: center;
@@ -197,8 +203,17 @@ HTML_TEMPLATE = """
         }
 
         .logo-container img {
-            height: 48px;
+            height: 42px;
             object-fit: contain;
+        }
+
+        .made-by {
+            font-size: 9px;
+            color: #666;
+            letter-spacing: 0.5px;
+            margin-top: -2px;
+            font-weight: 400;
+            white-space: nowrap;
         }
 
         .mode-selector {
@@ -234,7 +249,10 @@ HTML_TEMPLATE = """
                 padding: 12px 20px;
             }
             .logo-container img {
-                height: 64px;
+                height: 54px;
+            }
+            .made-by {
+                font-size: 10px;
             }
             .mode-btn {
                 padding: 6px 14px;
@@ -399,8 +417,11 @@ HTML_TEMPLATE = """
         <div class="top-bar">
             <div class="top-left">
                 <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
-                <div class="logo-container">
-                    <img src="/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
+                <div class="logo-wrapper">
+                    <div class="logo-container">
+                        <img src="/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
+                    </div>
+                    <span class="made-by">Made by Hudisey</span>
                 </div>
             </div>
             <div class="mode-selector">
