@@ -19,6 +19,7 @@
             color: #f1f1f1;
             display: flex;
             height: 100vh;
+            height: 100dvh; /* Mobil tarayıcılarda dinamik yükseklik uyumu */
             overflow: hidden;
         }
 
@@ -141,6 +142,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh;
             width: 100%;
         }
 
@@ -152,6 +154,7 @@
             align-items: center;
             justify-content: flex-start;
             min-height: 60px;
+            flex-shrink: 0;
         }
 
         .header-left {
@@ -265,6 +268,9 @@
             display: flex;
             justify-content: center;
             flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
         }
 
         #chat-form {
@@ -347,7 +353,7 @@
 
         @media (max-width: 768px) {
             .input-container {
-                padding-bottom: env(safe-area-inset-bottom, 15px);
+                padding-bottom: max(12px, env(safe-area-inset-bottom));
             }
         }
     </style>
@@ -417,7 +423,7 @@
 
         function closeSidebar() {
             sidebar.classList.remove('open');
-            overlay.classList.remove('active'); // Bug'ı çözen satır (Perde düzgünce kaldırılıyor)
+            overlay.classList.remove('active');
         }
 
         sidebarClose.addEventListener('click', closeSidebar);
@@ -448,7 +454,7 @@
             localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
             
             loadChatToScreen(0);
-            closeSidebar(); // Overlay direkt kaldırılıyor
+            closeSidebar();
         });
 
         function renderHistory() {
