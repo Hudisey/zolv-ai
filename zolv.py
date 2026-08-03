@@ -392,7 +392,7 @@ HTML_TEMPLATE = """
         <div class="chat-messages" id="chatMessages">
             <div class="message ai">
                 <div class="message-bubble">
-                    Selam! ZOLV.AI aktif. Nasıl yardımcı olabilirim?
+                    Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?
                 </div>
             </div>
         </div>
@@ -563,14 +563,16 @@ HTML_TEMPLATE = """
             }
 
             if (isListening) {
-                if (recognition) recognition.stop();
+                if (recognition) {
+                    recognition.stop();
+                }
                 return;
             }
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'tr-TR';
-            recognition.continuous = false;
+            recognition.continuous = true; // Sen kapatana kadar dinlemeye devam eder
             recognition.interimResults = true;
 
             recognition.onstart = function() {
@@ -600,7 +602,9 @@ HTML_TEMPLATE = """
         function stopListening() {
             isListening = false;
             const micBtn = document.getElementById('micBtn');
-            if (micBtn) micBtn.classList.remove('listening');
+            if (micBtn) {
+                micBtn.classList.remove('listening');
+            }
         }
 
         function escapeHtml(text) {
