@@ -417,7 +417,7 @@
 
         function closeSidebar() {
             sidebar.classList.remove('open');
-            overlay.classList.add('active');
+            overlay.classList.remove('active'); // Bug'ı çözen satır (Perde düzgünce kaldırılıyor)
         }
 
         sidebarClose.addEventListener('click', closeSidebar);
@@ -448,7 +448,7 @@
             localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
             
             loadChatToScreen(0);
-            closeSidebar();
+            closeSidebar(); // Overlay direkt kaldırılıyor
         });
 
         function renderHistory() {
