@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request
-from google.generativeai import genai
+import google.generativeai as genai
 from groq import Groq
 
 app = Flask(__name__, template_folder=".")
