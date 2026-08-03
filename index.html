@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZOLV.AI</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -101,6 +102,19 @@
             color: #fff;
         }
 
+        .chat-item.active {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .chat-item span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .chat-item .delete-chat {
             background: none;
             border: none;
@@ -169,8 +183,15 @@
         }
 
         .logo-container img {
-            height: 28px;
+            height: 26px;
             object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #fff;
         }
 
         .mode-selector {
@@ -320,14 +341,7 @@
             <button class="close-sidebar" onclick="toggleSidebar()">✕</button>
         </div>
         <button class="new-chat-btn" onclick="startNewChat()">+ Yeni Sohbet</button>
-        <div class="chat-list" id="chatList">
-            <div class="chat-item" onclick="loadChat(this)">
-                <span>Yeni Sohbet</span>
-                <button class="delete-chat" onclick="deleteChat(event)" title="Sohbeti Sil">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-            </div>
-        </div>
+        <div class="chat-list" id="chatList"></div>
     </div>
 
     <div class="main-container">
@@ -335,7 +349,8 @@
             <div class="top-left">
                 <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
                 <div class="logo-container">
-                    <img src="/static/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
+                    <img src="/static/logo.png" alt="Logo" onerror="this.style.display='none'">
+                    <span class="logo-text">ZOLV.AI</span>
                 </div>
             </div>
             <div class="mode-selector">
@@ -365,6 +380,12 @@
 
     <script>
         let currentMode = 'text';
+        let chats = {};
+        let activeChatId = null;
+
+        function initApp() {
+            startNewChat();
+        }
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -377,33 +398,51 @@
         }
 
         function startNewChat() {
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="message ai">
-                    <div class="message-bubble">Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?</div>
-                </div>
-            `;
-            
+            const chatId = 'chat_' + Date.now();
+            chats[chatId] = {
+                title: 'Yeni Sohbet',
+                messages: `
+                    <div class="message ai">
+                        <div class="message-bubble">Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?</div>
+                    </div>
+                `
+            };
+
             const chatList = document.getElementById('chatList');
             const newItem = document.createElement('div');
             newItem.className = 'chat-item';
-            newItem.setAttribute('onclick', 'loadChat(this)');
+            newItem.id = chatId;
             newItem.innerHTML = `
-                <span>Yeni Sohbet</span>
-                <button class="delete-chat" onclick="deleteChat(event)" title="Sohbeti Sil">
+                <span onclick="switchChat('${chatId}')">Yeni Sohbet</span>
+                <button class="delete-chat" onclick="deleteChat(event, '${chatId}')" title="Sohbeti Sil">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             `;
             chatList.prepend(newItem);
+            switchChat(chatId);
         }
 
-        function loadChat(element) {
-            // İleride geçmiş sohbetleri yüklemek için kullanılabilir
-            toggleSidebar();
+        function switchChat(chatId) {
+            activeChatId = chatId;
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const el = document.getElementById(chatId);
+            if (el) el.classList.add('active');
+
+            document.getElementById('chatMessages').innerHTML = chats[chatId].messages;
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         }
 
-        function deleteChat(event) {
+        function deleteChat(event, chatId) {
             event.stopPropagation();
-            event.target.closest('.chat-item').remove();
+            delete chats[chatId];
+            document.getElementById(chatId).remove();
+
+            const remainingIds = Object.keys(chats);
+            if (remainingIds.length > 0) {
+                switchChat(remainingIds[remainingIds.length - 1]);
+            } else {
+                startNewChat();
+            }
         }
 
         function handleKey(event) {
@@ -416,7 +455,7 @@
         async function sendMessage() {
             const input = document.getElementById('userInput');
             const prompt = input.value.trim();
-            if (!prompt) return;
+            if (!prompt || !activeChatId) return;
 
             const chatMessages = document.getElementById('chatMessages');
 
@@ -425,6 +464,14 @@
                     <div class="message-bubble">${escapeHtml(prompt)}</div>
                 </div>
             `;
+            
+            // İlk mesajda sol menüdeki başlığı güncelle
+            if (chats[activeChatId].title === 'Yeni Sohbet') {
+                chats[activeChatId].title = prompt.length > 20 ? prompt.substring(0, 20) + '...' : prompt;
+                const titleSpan = document.querySelector(`#${activeChatId} span`);
+                if (titleSpan) titleSpan.innerText = chats[activeChatId].title;
+            }
+
             input.value = '';
 
             const typingId = 'typing-' + Date.now();
@@ -449,7 +496,8 @@
                 });
 
                 const data = await response.json();
-                document.getElementById(typingId).remove();
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
 
                 const aiReply = data.response || data.error || "Bir hata oluştu.";
                 chatMessages.innerHTML += `
@@ -458,19 +506,24 @@
                     </div>
                 `;
             } catch (err) {
-                document.getElementById(typingId).remove();
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
                 chatMessages.innerHTML += `
                     <div class="message ai">
                         <div class="message-bubble">Bağlantı hatası oluştu.</div>
                     </div>
                 `;
             }
+
+            chats[activeChatId].messages = chatMessages.innerHTML;
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
