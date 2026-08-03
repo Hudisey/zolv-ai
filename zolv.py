@@ -51,7 +51,7 @@ async def yapay_zeka_cevapla(
             })
 
         response = client.chat.completions.create(
-            model="llama-3.2-11b-vision-preview",  # Groq görsel okuma destekli modeli
+            model="meta-llama/Llama-3.2-90B-Vision-Instruct",  # Güncel ve aktif Groq Vision modeli
             messages=[{"role": "user", "content": messages_content}],
             max_tokens=1024
         )
