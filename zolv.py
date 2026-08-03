@@ -27,7 +27,6 @@ async def chat_endpoint(message: str = Form(None), file: UploadFile = File(None)
     try:
         user_msg = message if message else "Merhaba"
         
-        # Groq API'ye istek atıyoruz (Llama 3 modelini kullanabilirsiniz)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
@@ -35,7 +34,7 @@ async def chat_endpoint(message: str = Form(None), file: UploadFile = File(None)
                     "content": user_msg,
                 }
             ],
-            model="llama3-8b-8192", # Dilerseniz farklı bir Groq modeli de seçebilirsiniz
+            model="llama-3.1-8b-instant",
         )
         
         ai_reply = chat_completion.choices[0].message.content
