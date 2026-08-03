@@ -51,7 +51,7 @@ async def yapay_zeka_cevapla(
             })
 
         response = client.chat.completions.create(
-            model="meta-llama/llama-4-maverick-17b-128e-instruct",  # Güncel Groq vizyon modeli
+            model="qwen/qwen3.6-27b",  # Güncel Groq vizyon modeli
             messages=[{"role": "user", "content": messages_content}],
             max_tokens=1024
         )
