@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from groq import Groq
 
 app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
@@ -10,6 +10,12 @@ client = Groq(api_key=groq_api_key) if groq_api_key else None
 @app.route('/')
 def index():
     return render_template('index.html')
+
+# Tarayıcı favicon'u doğrudan bulamazsa diye kafaya garantici rota koyuyoruz
+@app.route('/favicon.ico')
+@app.route('/favicon.png')
+def favicon():
+    return send_from_directory('.', 'favicon.png', mimetype='image/png')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
