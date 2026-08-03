@@ -1,13 +1,17 @@
-from flask import Flask, jsonify, request, render_template
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
+from google.generativeai import genai
 from groq import Groq
-import google.generativeai as genai
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+
+@app.route("/")
+def index():
+  return render_template("index.html")
 
 
 @app.route("/api/chat", methods=["POST"])
