@@ -552,10 +552,11 @@ HTML_TEMPLATE = """
 
         let recognition = null;
         let isListening = false;
+        let manualStop = false;
+        let finalTranscript = '';
 
         function toggleSpeechRecognition() {
             const micBtn = document.getElementById('micBtn');
-            const userInput = document.getElementById('userInput');
 
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("Tarayıcınız ses tanıma özelliğini desteklemiyor.");
@@ -563,43 +564,65 @@ HTML_TEMPLATE = """
             }
 
             if (isListening) {
-                if (recognition) {
-                    recognition.stop();
-                }
+                manualStop = true;
+                if (recognition) recognition.stop();
+                stopListeningUI();
                 return;
             }
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'tr-TR';
-            recognition.continuous = true; // Sen kapatana kadar dinlemeye devam eder
+            recognition.continuous = true;
             recognition.interimResults = true;
+
+            finalTranscript = document.getElementById('userInput').value;
+            if (finalTranscript && !finalTranscript.endsWith(' ')) {
+                finalTranscript += ' ';
+            }
 
             recognition.onstart = function() {
                 isListening = true;
+                manualStop = false;
                 micBtn.classList.add('listening');
             };
 
             recognition.onresult = function(event) {
-                let transcript = '';
+                let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
                 }
-                userInput.value = transcript;
+                document.getElementById('userInput').value = finalTranscript + interimTranscript;
             };
 
             recognition.onerror = function(event) {
-                stopListening();
+                console.error("Ses tanıma hatası:", event.error);
             };
 
             recognition.onend = function() {
-                stopListening();
+                if (isListening && !manualStop) {
+                    try {
+                        recognition.start();
+                    } catch(e) {
+                        stopListeningUI();
+                    }
+                } else {
+                    stopListeningUI();
+                }
             };
 
-            recognition.start();
+            try {
+                recognition.start();
+            } catch(e) {
+                stopListeningUI();
+            }
         }
 
-        function stopListening() {
+        function stopListeningUI() {
             isListening = false;
             const micBtn = document.getElementById('micBtn');
             if (micBtn) {
