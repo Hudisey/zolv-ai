@@ -2,22 +2,20 @@ import os
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
+from groq import Groq
 
 app = FastAPI()
 
-# Statik dosyaları (logo, favicon vb.) dış dünyaya aç
+# Render.com Environment Variables'tan Groq API Key'i güvenle çekiyoruz
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
 try:
-    # Dizin olarak mevcut klasörü kullan
     app.mount("/static", StaticFiles(directory="."), name="static")
 except Exception as e:
     print(f"StaticFiles mount hatası: {e}")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
-    """
-    Ana sayfa isteğinde index.html dosyasını döndürür.
-    """
     file_path = "index.html"
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
@@ -26,16 +24,22 @@ async def read_index():
 
 @app.post("/chat")
 async def chat_endpoint(message: str = Form(None), file: UploadFile = File(None)):
-    """
-    Chat isteklerini işler. Buraya gerçek AI entegrasyonu gelecek.
-    """
     try:
-        file_info = f" (Dosya: {file.filename})" if file else ""
-        user_msg = message if message else "Boş mesaj"
+        user_msg = message if message else "Merhaba"
         
-        # --- ESKİ STATİK YANIT BURADAYDI, KALDIRILDI ---
-        # Artık gerçek AI bağlandığında burası dolacak.
-        # Şimdilik bir onay mesajı dönelim:
-        return JSONResponse(content={"reply": f"Mesajınız alındı: '{user_msg}'{file_info}. AI entegrasyonu yakında aktif olacak!"}, status_code=200)
+        # Groq API'ye istek atıyoruz (Llama 3 modelini kullanabilirsiniz)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_msg,
+                }
+            ],
+            model="llama3-8b-8192", # Dilerseniz farklı bir Groq modeli de seçebilirsiniz
+        )
+        
+        ai_reply = chat_completion.choices[0].message.content
+        return JSONResponse(content={"reply": ai_reply}, status_code=200)
+        
     except Exception as e:
         return JSONResponse(content={"detail": str(e)}, status_code=500)
