@@ -1,67 +1,70 @@
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from openai import OpenAI
 import os
-import base64
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import HTTPException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI()
-from fastapi.staticfiles import StaticFiles
 
-# FastAPI'ye statik dosyaların (resimler vb.) olduğu klasörü tanıtıyoruz
-app.mount("/", StaticFiles(directory="."), name="static")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# 1. STATİK DOSYALARI TANIT (LOGO, FAVICON VB.)
+# Bu satır, projenin ana klasöründeki tüm dosyaları dış dünyaya açar.
+# render.com üzerinde çalışırken bu genellikle '/' kök dizinidir.
+try:
+    app.mount("/static", StaticFiles(directory="."), name="static")
+except Exception as e:
+    print(f"StaticFiles mount edilemedi (muhtemelen dizin boş veya yanlış): {e}")
 
-app.mount("/static", StaticFiles(directory="."), name="static")
-
-client = OpenAI(
-    api_key=os.environ.get("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
-
+# 2. ANA SAYFA YÖNLENDİRMESİ
 @app.get("/", response_class=HTMLResponse)
-def ana_sayfa():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "index.html bulunamadı!"
+async def read_index():
+    """
+    Tarayıcı ana sayfaya ('/') girdiğinde index.html dosyasını okuyup döndürür.
+    """
+    file_path = "index.html"
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read(), status_code=200)
+        except Exception as e:
+            return HTMLResponse(content=f"<h1>Hata: index.html okunamadı</h1><p>{e}</p>", status_code=500)
+    else:
+        # Eğer index.html yoksa, render.com hata vermemesi için basit bir HTML dön
+        return HTMLResponse(content="""
+            <!DOCTYPE html>
+            <html lang="tr">
+            <head>
+                <meta charset="UTF-8">
+                <title>ZOLV.AI - Kurulum</title>
+                <style>
+                    body { font-family: sans-serif; background: #0e0e0e; color: white; text-align: center; padding-top: 50px; }
+                </style>
+            </head>
+            <body>
+                <h1>Hoş Geldiniz</h1>
+                <p>Henüz bir <code>index.html</code> dosyası oluşturulmadı veya bulunamadı.</p>
+                <p>Lütfen proje ana dizinine <code>index.html</code> dosyanızı yükleyin.</p>
+            </body>
+            </html>
+        """, status_code=404)
 
-@app.post("/yapay-zeka-sor")
-async def yapay_zeka_cevapla(
-    mesaj: str = Form(...), 
-    file: UploadFile = None
-):
+# 3. CHAT İŞLEMLERİ İÇİN ÖRNEK ROTA
+@app.post("/chat")
+async def chat_endpoint(message: str = Form(...), file: UploadFile = File(None)):
+    """
+    Chat formundan gelen mesajı ve varsa dosyayı işler (şimdilik örnek yanıt).
+    """
     try:
-        messages_content = [{"type": "text", "text": mesaj}]
-        
-        # Eğer kullanıcı bir görsel yüklediyse base64 formatına çevirip modele verelim
-        if file:
-            image_bytes = await file.read()
-            base64_image = base64.b64encode(image_bytes).decode("utf-8")
-            messages_content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}"
-                }
-            })
-
-        response = client.chat.completions.create(
-            model="qwen/qwen3.6-27b",
-            messages=[
-                {"role": "system", "content": "Sen yardımcı bir yapay zeka asistanısın. Kullanıcıya her zaman Türkçe yanıt ver."},
-                {"role": "user", "content": messages_content}
-            ],
-            max_tokens=1024
-        )
-        cevap = response.choices[0].message.content
-        return {"cevap": cevap}
+        file_info = f" (Dosya: {file.filename})" if file else ""
+        return JSONResponse(content={"reply": f"Mesajınız alındı: '{message}'{file_info}. Yapay zeka yakında entegre edilecek."}, status_code=200)
     except Exception as e:
-        return {"cevap": f"Bir hata oluştu: {str(e)}"}
+        return JSONResponse(content={"detail": f"Chat işleminde hata oluştu: {str(e)}"}, status_code=500)
+
+# 4. ÖZEL HATA YÖNETİMİ ({"detail":"Not Found"} yerine daha açıklayıcı olması için)
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request, exc):
+    if exc.status_code == 404 and request.url.path.startswith("/"):
+        # Eğer ana sayfadaki dosyalar (logo.png vb.) bulunamazsa hata sayfasına yönlendirme yapma, sadece 404 dön
+        # veya özel bir hata mesajı döndür.
+        return HTMLResponse(content="<h1>Sayfa Bulunamadı</h1><p>Aradığınız sayfa veya dosya sunucuda mevcut değil.</p>", status_code=404)
+    return JSONResponse(content={"detail": exc.detail}, status_code=exc.status_code)
