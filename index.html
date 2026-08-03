@@ -22,7 +22,6 @@
             overflow: hidden;
         }
 
-        /* Sidebar (Sol Menü) */
         #sidebar {
             width: 260px;
             background-color: #121212;
@@ -96,7 +95,6 @@
             color: #fff;
         }
 
-        /* Kırmızı Çöp Kutusu Butonu */
         .delete-chat-btn {
             background: none;
             border: none;
@@ -132,7 +130,6 @@
             display: block;
         }
 
-        /* Ana İçerik */
         .main-content {
             flex: 1;
             display: flex;
@@ -420,6 +417,11 @@
         overlay.addEventListener('click', closeSidebar);
 
         newChatBtn.addEventListener('click', () => {
+            const newChatTitle = `Sohbet ${chatHistories.length + 1}`;
+            chatHistories.unshift({ title: newChatTitle });
+            localStorage.setItem('zolv_chats', JSON.stringify(chatHistories));
+            renderHistory();
+
             chatContainer.innerHTML = `
                 <div class="message ai-message">
                     Yeni bir sohbet başlatıldı. Nasıl yardımcı olabilirim?
@@ -439,7 +441,7 @@
                 item.className = 'history-item';
                 
                 const titleSpan = document.createElement('span');
-                titleSpan.textContent = chat.title || `Sohbet ${index + 1}`;
+                titleSpan.textContent = chat.title;
                 titleSpan.style.overflow = 'hidden';
                 titleSpan.style.textOverflow = 'ellipsis';
                 titleSpan.style.whiteSpace = 'nowrap';
