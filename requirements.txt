@@ -1,4 +1,4 @@
-fastapi
-uvicorn
+flask
 groq
-python-multipart
+google-generativeai
+gunicorn
