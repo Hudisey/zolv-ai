@@ -45,7 +45,7 @@ def chat():
       return jsonify({"response": res.choices[0].message.content})
 
     elif mode == "image":
-      model = genai.GenerativeModel("gemini-1.5-flash")
+      model = genai.GenerativeModel("gemini-2.5-flash")
       res = model.generate_content(
           f"Görsel için detaylı prompt oluştur: {prompt}"
       )
