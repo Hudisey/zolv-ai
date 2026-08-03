@@ -597,7 +597,13 @@ HTML_TEMPLATE = """
             };
 
             recognition.onerror = function(event) {
-                console.error("Ses tanıma hatası:", event.error);
+                console.error("Ses tanıma hatası detayı:", event.error);
+                if (event.error === 'not-allowed') {
+                    alert("Mikrofon izni verilmedi! Lütfen tarayıcı adres çubuğundaki kilit simgesine tıklayarak mikrofon iznini aktif et.");
+                } else if (event.error === 'network') {
+                    alert("Ağ hatası: Tarayıcının ses tanıma servisi (Google sunucuları) engellenmiş veya güvenli olmayan bağlantı (HTTP) yüzünden reddedilmiş olabilir.");
+                }
+                stopListeningUI();
             };
 
             recognition.onend = function() {
@@ -615,6 +621,7 @@ HTML_TEMPLATE = """
             try {
                 recognition.start();
             } catch(e) {
+                console.error("Start hatası:", e);
                 stopListeningUI();
             }
         }
