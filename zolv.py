@@ -553,7 +553,7 @@ HTML_TEMPLATE = """
         let recognition = null;
         let isListening = false;
         let manualStop = false;
-        let finalTranscript = '';
+        let baseTranscript = '';
 
         function toggleSpeechRecognition() {
             const micBtn = document.getElementById('micBtn');
@@ -576,9 +576,9 @@ HTML_TEMPLATE = """
             recognition.continuous = true;
             recognition.interimResults = true;
 
-            finalTranscript = document.getElementById('userInput').value;
-            if (finalTranscript && !finalTranscript.endsWith(' ')) {
-                finalTranscript += ' ';
+            baseTranscript = document.getElementById('userInput').value;
+            if (baseTranscript && !baseTranscript.endsWith(' ')) {
+                baseTranscript += ' ';
             }
 
             recognition.onstart = function() {
@@ -588,15 +588,12 @@ HTML_TEMPLATE = """
             };
 
             recognition.onresult = function(event) {
-                let interimTranscript = '';
+                let currentSessionText = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + ' ';
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
+                    currentSessionText += event.results[i][0].transcript;
                 }
-                document.getElementById('userInput').value = finalTranscript + interimTranscript;
+                const inputElement = document.getElementById('userInput');
+                inputElement.value = baseTranscript + currentSessionText;
             };
 
             recognition.onerror = function(event) {
