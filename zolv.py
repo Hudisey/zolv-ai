@@ -3,7 +3,9 @@ from flask import Flask, jsonify, render_template, request
 import google.generativeai as genai
 from groq import Groq
 
-app = Flask(__name__, template_folder=".")
+app = Flask(
+    __name__, template_folder=".", static_folder="static", static_url_path="/static"
+)
 
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
