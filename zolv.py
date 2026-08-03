@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from openai import OpenAI
+import os
 
 app = FastAPI()
 
@@ -13,9 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Groq istemcisi (OpenAI altyapısını kullanır ama tamamen ücretsizdir)
-import os
-
 client = OpenAI(
     api_key=os.environ.get("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
@@ -24,11 +23,19 @@ client = OpenAI(
 class MesajIstegi(BaseModel):
     mesaj: str
 
+# Ana dizine girildiğinde index.html dosyasını ekrana basar
+@app.get("/", response_class=HTMLResponse)
+def ana_sayfa():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "index.html bulunamadı!"
+
 @app.post("/yapay-zeka-sor")
 def yapay_zeka_cevapla(istek: MesajIstegi):
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",  # Ücretsiz ve çok hızlı model
+            model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": istek.mesaj}]
         )
         cevap = response.choices[0].message.content
