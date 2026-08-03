@@ -321,8 +321,8 @@
         </div>
         <button class="new-chat-btn" onclick="startNewChat()">+ Yeni Sohbet</button>
         <div class="chat-list" id="chatList">
-            <div class="chat-item">
-                <span>Sohbet 1</span>
+            <div class="chat-item" onclick="loadChat(this)">
+                <span>Yeni Sohbet</span>
                 <button class="delete-chat" onclick="deleteChat(event)" title="Sohbeti Sil">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
@@ -335,7 +335,7 @@
             <div class="top-left">
                 <button class="menu-bubble-btn" onclick="toggleSidebar()">&gt;</button>
                 <div class="logo-container">
-                    <img src="/static/logo.png" alt="ZOLV.AI">
+                    <img src="/static/logo.png" alt="ZOLV.AI" onerror="this.style.display='none'">
                 </div>
             </div>
             <div class="mode-selector">
@@ -382,6 +382,23 @@
                     <div class="message-bubble">Yeni sohbet başlatıldı. Nasıl yardımcı olabilirim?</div>
                 </div>
             `;
+            
+            const chatList = document.getElementById('chatList');
+            const newItem = document.createElement('div');
+            newItem.className = 'chat-item';
+            newItem.setAttribute('onclick', 'loadChat(this)');
+            newItem.innerHTML = `
+                <span>Yeni Sohbet</span>
+                <button class="delete-chat" onclick="deleteChat(event)" title="Sohbeti Sil">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+            chatList.prepend(newItem);
+        }
+
+        function loadChat(element) {
+            // İleride geçmiş sohbetleri yüklemek için kullanılabilir
+            toggleSidebar();
         }
 
         function deleteChat(event) {
